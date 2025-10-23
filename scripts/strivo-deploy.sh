@@ -27,6 +27,10 @@ git config --global --add safe.directory "$APP_DIR" || true
 
 echo "[STRIVO-DEPLOY] Pulling latest code from $BRANCH..."
 cd "$APP_DIR"
+# Load .env into process env
+set -a
+[ -f "$APP_DIR/.env" ] && . "$APP_DIR/.env"
+set +a
 GIT_SSH_COMMAND="ssh -i $HOME/.ssh/github_deploy -o IdentitiesOnly=yes" \
   git fetch origin "$BRANCH"
 git reset --hard "origin/$BRANCH"
