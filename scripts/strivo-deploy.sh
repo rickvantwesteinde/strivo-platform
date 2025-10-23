@@ -32,8 +32,9 @@ GIT_SSH_COMMAND="ssh -i $HOME/.ssh/github_deploy -o IdentitiesOnly=yes" \
 git reset --hard "origin/$BRANCH"
 
 echo "[STRIVO-DEPLOY] Bundler install..."
-bundle config set --local path vendor/bundle
-bundle install --without development test
+bundle config set --local path 'vendor/bundle'
+bundle config set without 'development test'
+bundle install
 
 echo "[STRIVO-DEPLOY] Node deps..."
 corepack enable || true
