@@ -26,4 +26,4 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            sudo /usr/local/bin/strivo-deploy
+             /usr/local/bin/strivo-deploy
