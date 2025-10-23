@@ -26,4 +26,5 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+           # Run deployment as the SSH user (no sudo)
            /usr/local/bin/strivo-deploy
