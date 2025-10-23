@@ -45,6 +45,11 @@ corepack enable || true
 command -v yarn >/dev/null 2>&1 || npm -g i yarn || true
 [ -f package.json ] && yarn install --frozen-lockfile || true
 
+# Ensure env
+: "${RAILS_ENV:=production}"
+export RAILS_ENV
+echo "[STRIVO-DEPLOY] On commit: $(git rev-parse --short HEAD)"
+
 echo "[STRIVO-DEPLOY] DB migrate + assets..."
 RAILS_ENV=production bundle exec rake db:migrate
 RAILS_ENV=production bundle exec rake assets:precompile
