@@ -1,0 +1,20 @@
+
+# Env/secrets
+.env
+config/master.key
+config/credentials/*.key
+# Build artifacts
+/vendor/bundle
+/node_modules
+/log
+/tmp
+
+# Env/secrets
+.env
+config/master.key
+config/credentials/*.key
+# Build artifacts
+/vendor/bundle
+/node_modules
+/log
+/tmp
