@@ -30,5 +30,5 @@ echo "== Assets =="
 RAILS_ENV=production bundle exec rails assets:precompile
 
 echo "== Restart Puma =="
-sudo systemctl restart puma || systemctl restart puma
+sudo -n /usr/bin/systemctl restart puma
 echo "Done."
