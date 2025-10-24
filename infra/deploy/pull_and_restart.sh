@@ -4,14 +4,24 @@ set -euo pipefail
 APP_DIR=/var/www/strivo
 cd "$APP_DIR"
 
+# rbenv + environment
+export PATH="$HOME/.rbenv/bin:$PATH"; eval "$($HOME/.rbenv/bin/rbenv init - bash)"
+
+# Laad .env zodat SECRET_KEY_BASE e.d. beschikbaar zijn
+set -a
+[ -f .env ] && . ./.env
+set +a
+: "\${SECRET_KEY_BASE:?SECRET_KEY_BASE missing}"
+
 echo "== Pull latest =="
 git fetch --all
 git reset --hard origin/main
 
 echo "== Bundle =="
-export PATH="$HOME/.rbenv/bin:$PATH"; eval "$($HOME/.rbenv/bin/rbenv init - bash)"
 bundle config set path "vendor/bundle"
-bundle install --without development test --deployment
+bundle config set deployment true
+bundle config set without "development test"
+bundle install
 
 echo "== DB migrate =="
 RAILS_ENV=production bundle exec rails db:migrate
@@ -20,5 +30,5 @@ echo "== Assets =="
 RAILS_ENV=production bundle exec rails assets:precompile
 
 echo "== Restart Puma =="
-sudo systemctl restart puma
+sudo systemctl restart puma || systemctl restart puma
 echo "Done."
