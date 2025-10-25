@@ -21,3 +21,6 @@ config/credentials/*.key
 
 # Precompiled assets
 /public/assets
+vendor/bundle/
+pkg/
+engines/*/pkg/

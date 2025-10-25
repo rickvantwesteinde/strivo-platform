@@ -1,3 +1,8 @@
+PATH
+  remote: engines/strivo_admin
+  specs:
+    strivo_admin (0.1.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -991,6 +996,8 @@ DEPENDENCIES
   rails (~> 8.0.0)
   rails-controller-testing
   redis (>= 4.0.1)
+  rspec-rails
+  rspec_junit_formatter
   rubocop (~> 1.23)
   rubocop-performance
   rubocop-rails
@@ -1013,6 +1020,7 @@ DEPENDENCIES
   spree_sample (~> 5.1)
   spree_storefront (~> 5.1)
   spree_stripe
+  strivo_admin!
   stimulus-rails
   turbo-rails
   tzinfo-data

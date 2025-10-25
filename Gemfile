@@ -48,6 +48,9 @@ group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ]
 
+  gem "rspec-rails"
+  gem "rspec_junit_formatter", require: false
+
   gem 'brakeman'
   gem 'dotenv-rails', '~> 3.1'
   gem 'rubocop', '~> 1.23'
@@ -109,3 +112,6 @@ gem "spree_stripe"
 gem "spree_google_analytics", "~> 1.0"
 gem "spree_klaviyo", "~> 1.0"
 gem "spree_paypal_checkout", "~> 0.5"
+
+gem "strivo_admin", path: "engines/strivo_admin"
+

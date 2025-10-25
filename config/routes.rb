@@ -40,6 +40,8 @@ Rails.application.routes.draw do
   # the default of "spree".
   mount Spree::Core::Engine, at: '/'
 
+  mount Strivo::Admin::Engine, at: "/admin/strivo"
+
   mount Sidekiq::Web => "/sidekiq" # access it at http://localhost:3000/sidekiq
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
