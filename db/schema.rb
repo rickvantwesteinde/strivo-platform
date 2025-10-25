@@ -1923,6 +1923,130 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_02_154146) do
     t.index ["user_id"], name: "index_spree_wishlists_on_user_id"
   end
 
+  create_table "gyms", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["slug"], name: "index_gyms_on_slug", unique: true
+  end
+
+  create_table "class_types", force: :cascade do |t|
+    t.bigint "gym_id", null: false
+    t.string "name", null: false
+    t.integer "default_capacity", default: 14, null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["gym_id", "name"], name: "index_class_types_on_gym_id_and_name", unique: true
+    t.index ["gym_id"], name: "index_class_types_on_gym_id"
+  end
+
+  create_table "trainers", force: :cascade do |t|
+    t.bigint "gym_id", null: false
+    t.bigint "user_id", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["gym_id", "user_id"], name: "index_trainers_on_gym_id_and_user_id", unique: true
+    t.index ["gym_id"], name: "index_trainers_on_gym_id"
+    t.index ["user_id"], name: "index_trainers_on_user_id"
+  end
+
+  create_table "policies", force: :cascade do |t|
+    t.bigint "gym_id", null: false
+    t.integer "cancel_cutoff_hours", default: 6, null: false
+    t.integer "rollover_limit", default: 0, null: false
+    t.integer "max_active_daily_bookings", default: 1, null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["gym_id"], name: "index_policies_on_gym_id"
+  end
+
+  create_table "subscription_plans", force: :cascade do |t|
+    t.bigint "gym_id", null: false
+    t.string "name", null: false
+    t.integer "per_week", default: 0, null: false
+    t.integer "price_cents", default: 0, null: false
+    t.boolean "unlimited", default: false, null: false
+    t.string "stripe_price_id"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["gym_id", "name"], name: "index_subscription_plans_on_gym_id_and_name", unique: true
+    t.index ["gym_id"], name: "index_subscription_plans_on_gym_id"
+  end
+
+  create_table "subscriptions", force: :cascade do |t|
+    t.bigint "gym_id", null: false
+    t.bigint "user_id", null: false
+    t.bigint "subscription_plan_id", null: false
+    t.date "starts_on", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "ended_at"
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["gym_id"], name: "index_subscriptions_on_gym_id"
+    t.index ["subscription_plan_id"], name: "index_subscriptions_on_subscription_plan_id"
+    t.index ["user_id", "subscription_plan_id", "status"], name: "index_active_subscription_by_user_and_plan"
+    t.index ["user_id"], name: "index_subscriptions_on_user_id"
+  end
+
+  create_table "sessions", force: :cascade do |t|
+    t.bigint "class_type_id", null: false
+    t.bigint "trainer_id", null: false
+    t.datetime "starts_at", null: false
+    t.integer "duration_minutes", null: false
+    t.integer "capacity", default: 14, null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["class_type_id", "starts_at"], name: "index_sessions_on_class_type_id_and_starts_at"
+    t.index ["class_type_id"], name: "index_sessions_on_class_type_id"
+    t.index ["trainer_id"], name: "index_sessions_on_trainer_id"
+  end
+
+  create_table "credit_ledgers", force: :cascade do |t|
+    t.bigint "gym_id", null: false
+    t.bigint "user_id", null: false
+    t.integer "amount", null: false
+    t.integer "reason", default: 0, null: false
+    t.bigint "booking_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["booking_id"], name: "index_credit_ledgers_on_booking_id"
+    t.index ["created_at"], name: "index_credit_ledgers_on_created_at"
+    t.index ["gym_id"], name: "index_credit_ledgers_on_gym_id"
+    t.index ["user_id"], name: "index_credit_ledgers_on_user_id"
+  end
+
+  create_table "bookings", force: :cascade do |t|
+    t.bigint "gym_id", null: false
+    t.bigint "user_id", null: false
+    t.bigint "session_id", null: false
+    t.bigint "subscription_plan_id", null: false
+    t.integer "status", default: 0, null: false
+    t.integer "used_credits", default: 0, null: false
+    t.datetime "canceled_at"
+    t.boolean "no_show", default: false, null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["session_id", "user_id"], name: "index_bookings_on_session_id_and_user_id", unique: true
+    t.index ["session_id"], name: "index_bookings_on_session_id"
+    t.index ["status"], name: "index_bookings_on_status"
+    t.index ["subscription_plan_id"], name: "index_bookings_on_subscription_plan_id"
+    t.index ["user_id"], name: "index_bookings_on_user_id"
+  end
+
+  create_table "waitlist_entries", force: :cascade do |t|
+    t.bigint "session_id", null: false
+    t.bigint "user_id", null: false
+    t.integer "position", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
+    t.index ["session_id", "position"], name: "index_waitlist_entries_on_session_id_and_position", unique: true
+    t.index ["session_id", "user_id"], name: "index_waitlist_entries_on_session_id_and_user_id", unique: true
+    t.index ["session_id"], name: "index_waitlist_entries_on_session_id"
+    t.index ["user_id"], name: "index_waitlist_entries_on_user_id"
+  end
+
   create_table "spree_zone_members", force: :cascade do |t|
     t.string "zoneable_type"
     t.bigint "zoneable_id"
@@ -1947,6 +2071,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_02_154146) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "bookings", "gyms"
+  add_foreign_key "bookings", "sessions"
+  add_foreign_key "bookings", "spree_users", column: "user_id"
+  add_foreign_key "bookings", "subscription_plans"
+  add_foreign_key "class_types", "gyms"
+  add_foreign_key "credit_ledgers", "bookings"
+  add_foreign_key "credit_ledgers", "gyms"
+  add_foreign_key "credit_ledgers", "spree_users", column: "user_id"
+  add_foreign_key "policies", "gyms"
   add_foreign_key "spree_oauth_access_grants", "spree_oauth_applications", column: "application_id"
   add_foreign_key "spree_oauth_access_tokens", "spree_oauth_applications", column: "application_id"
   add_foreign_key "spree_option_type_translations", "spree_option_types"
@@ -1959,4 +2092,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_02_154146) do
   add_foreign_key "spree_store_translations", "spree_stores"
   add_foreign_key "spree_taxon_translations", "spree_taxons"
   add_foreign_key "spree_taxonomy_translations", "spree_taxonomies"
+  add_foreign_key "subscription_plans", "gyms"
+  add_foreign_key "subscriptions", "gyms"
+  add_foreign_key "subscriptions", "spree_users", column: "user_id"
+  add_foreign_key "subscriptions", "subscription_plans"
+  add_foreign_key "trainers", "gyms"
+  add_foreign_key "trainers", "spree_users", column: "user_id"
+  add_foreign_key "waitlist_entries", "sessions"
+  add_foreign_key "waitlist_entries", "spree_users", column: "user_id"
+  add_foreign_key "sessions", "class_types"
+  add_foreign_key "sessions", "trainers"
 end
