@@ -21,21 +21,25 @@ jobs:
         ports: ['5432:5432']
         options: >-
           --health-cmd="pg_isready -U postgres -d strivo_test"
-          --health-interval=10s --health-timeout=5s --health-retries=5
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10   # extra tijd om healthy te worden
 
       redis:
         image: redis:7
         ports: ['6379:6379']
         options: >-
           --health-cmd="redis-cli ping"
-          --health-interval=10s --health-timeout=5s --health-retries=5
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     env:
       RAILS_ENV: test
       SECRET_KEY_BASE: dummy_key_for_ci
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/strivo_test
       REDIS_URL: redis://localhost:6379/1
-      BUNDLE_WITHOUT: production   # we willen NIET dev/test uitsluiten
+      BUNDLE_WITHOUT: production   # dev/test WEL installeren
 
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +56,6 @@ jobs:
                                   libpq-dev postgresql-client \
                                   libvips
 
-      # <<< BELANGRIJK: reset bundler 'without' en installeer gems incl. dev/test
       - name: Install gems (dev+test included)
         run: |
           gem install bundler -v 2.5.18
@@ -64,8 +67,26 @@ jobs:
       - name: Fix bin permissions (CI)
         run: chmod +x bin/* || true
 
+      # <<< NIEUW: expliciet wachten tot Postgres connecties accepteert
+      - name: Wait for Postgres to be ready
+        run: |
+          echo "Waiting for Postgres on localhost:5432 (db=strivo_test, user=postgres)"
+          for i in $(seq 1 60); do
+            if pg_isready -h localhost -p 5432 -U postgres -d strivo_test >/dev/null 2>&1; then
+              echo "Postgres is ready (after ${i}s)"
+              exit 0
+            fi
+            echo "Waiting for Postgres... (${i}/60)"
+            sleep 1
+          done
+          echo "Postgres not ready after 60s — dumping service info"
+          docker ps -a --filter "ancestor=postgres:14" --format "container: {{.ID}} image: {{.Image}}"
+          exit 1
+
+      # Defensieve retry + trace voor betere foutmeldingen
       - name: Prepare DB
-        run: bundle exec rails db:prepare
+        run: |
+          bundle exec rails db:prepare --trace || (sleep 5 && bundle exec rails db:prepare --trace)
 
       - name: RSpec
         run: bundle exec rspec --format documentation --backtrace
