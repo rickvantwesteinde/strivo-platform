@@ -1,0 +1,59 @@
+<h1>Mijn boekingen</h1>
+
+<p>Beschikbare credits: <strong><%= @remaining_credits %></strong></p>
+
+<section>
+  <h2>Komende boekingen</h2>
+  <% if @upcoming_bookings.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th>Datum</th>
+          <th>Les</th>
+          <th>Trainer</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @upcoming_bookings.each do |booking| %>
+          <tr>
+            <td><%= l(booking.session.starts_at, format: :long) %></td>
+            <td><%= booking.session.class_type.name %></td>
+            <td><%= booking.session.trainer_name.presence || '-' %></td>
+            <td><%= booking.status.humanize %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>Geen komende boekingen.</p>
+  <% end %>
+</section>
+
+<section>
+  <h2>Voorbije boekingen</h2>
+  <% if @past_bookings.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th>Datum</th>
+          <th>Les</th>
+          <th>Trainer</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @past_bookings.each do |booking| %>
+          <tr>
+            <td><%= l(booking.session.starts_at, format: :long) %></td>
+            <td><%= booking.session.class_type.name %></td>
+            <td><%= booking.session.trainer_name.presence || '-' %></td>
+            <td><%= booking.status.humanize %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>Geen eerdere boekingen.</p>
+  <% end %>
+</section>
