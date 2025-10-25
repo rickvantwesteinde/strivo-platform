@@ -7,6 +7,10 @@ on:
   push:
     branches: [ main, feature/**, fix/** ]
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   rspec:
     runs-on: ubuntu-latest
@@ -23,7 +27,7 @@ jobs:
           --health-cmd="pg_isready -U postgres -d strivo_test"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=10   # extra tijd om healthy te worden
+          --health-retries=10   # give PG longer to become healthy
 
       redis:
         image: redis:7
@@ -37,9 +41,10 @@ jobs:
     env:
       RAILS_ENV: test
       SECRET_KEY_BASE: dummy_key_for_ci
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/strivo_test
-      REDIS_URL: redis://localhost:6379/1
-      BUNDLE_WITHOUT: production   # dev/test WEL installeren
+      # Force IPv4 localhost to avoid "::1" surprises on some runners
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/strivo_test
+      REDIS_URL: redis://127.0.0.1:6379/1
+      BUNDLE_WITHOUT: production
 
     steps:
       - uses: actions/checkout@v4
@@ -67,24 +72,23 @@ jobs:
       - name: Fix bin permissions (CI)
         run: chmod +x bin/* || true
 
-      # <<< NIEUW: expliciet wachten tot Postgres connecties accepteert
+      # --- NEW: explicit wait to ensure PG is accepting TCP connections
       - name: Wait for Postgres to be ready
         run: |
-          echo "Waiting for Postgres on localhost:5432 (db=strivo_test, user=postgres)"
+          echo "Waiting for Postgres on 127.0.0.1:5432 (db=strivo_test, user=postgres)"
           for i in $(seq 1 60); do
-            if pg_isready -h localhost -p 5432 -U postgres -d strivo_test >/dev/null 2>&1; then
+            if pg_isready -h 127.0.0.1 -p 5432 -U postgres -d strivo_test >/dev/null 2>&1; then
               echo "Postgres is ready (after ${i}s)"
               exit 0
             fi
             echo "Waiting for Postgres... (${i}/60)"
             sleep 1
           done
-          echo "Postgres not ready after 60s — dumping service info"
-          docker ps -a --filter "ancestor=postgres:14" --format "container: {{.ID}} image: {{.Image}}"
+          echo "Postgres not ready after 60s — dumping containers"
+          docker ps -a --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}"
           exit 1
 
-      # Defensieve retry + trace voor betere foutmeldingen
-      - name: Prepare DB
+      - name: Prepare DB (trace + retry)
         run: |
           bundle exec rails db:prepare --trace || (sleep 5 && bundle exec rails db:prepare --trace)
 
