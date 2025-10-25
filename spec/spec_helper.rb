@@ -17,6 +17,9 @@
 ENV['RAILS_ENV'] ||= 'test'
 require File.expand_path('../config/environment', __dir__)
 
+require 'rspec/rails'                  # ← laad rspec-rails
+ActiveRecord::Migration.maintain_test_schema!  # ← houd test DB-schema bij
+
 require 'dotenv/load'
 require 'sidekiq/testing'
 
