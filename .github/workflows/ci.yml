@@ -1,7 +1,7 @@
 name: CI
 
 on:
-  workflow_dispatch: {}          # handmatig kunnen starten via Actions-tab
+  workflow_dispatch: {}
   pull_request:
     branches: [ main ]
   push:
@@ -40,13 +40,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Ruby en Bundler (matcht jouw project)
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3.5'
-          bundler-cache: false   # we installeren eerst system deps
+          bundler-cache: false
 
-      # Systeempakketten die bundling/boot nodig heeft
       - name: Install system packages
         run: |
           sudo apt-get update
@@ -54,16 +52,17 @@ jobs:
                                   libpq-dev postgresql-client \
                                   libvips
 
-      # Bundler vastzetten en gems installeren (dev/test NIET uitsluiten)
       - name: Install gems
         run: |
           gem install bundler -v 2.5.18
           bundle _2.5.18_ install --jobs 4 --retry 3
 
-      # DB klaarzetten
-      - name: Prepare DB
-        run: bin/rails db:prepare
+      # Optioneel: zet chmod goed in CI zodat andere binstubs ook werken
+      - name: Fix bin permissions (CI)
+        run: chmod +x bin/* || true
 
-      # Tests
+      - name: Prepare DB
+        run: bundle exec rails db:prepare
+
       - name: RSpec
         run: bundle exec rspec --format documentation --backtrace
