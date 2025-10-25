@@ -27,7 +27,7 @@ jobs:
           --health-cmd="pg_isready -U postgres -d strivo_test"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=10   # give PG longer to become healthy
+          --health-retries=10
 
       redis:
         image: redis:7
@@ -41,7 +41,6 @@ jobs:
     env:
       RAILS_ENV: test
       SECRET_KEY_BASE: dummy_key_for_ci
-      # Force IPv4 localhost to avoid "::1" surprises on some runners
       DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/strivo_test
       REDIS_URL: redis://127.0.0.1:6379/1
       BUNDLE_WITHOUT: production
@@ -72,7 +71,6 @@ jobs:
       - name: Fix bin permissions (CI)
         run: chmod +x bin/* || true
 
-      # --- NEW: explicit wait to ensure PG is accepting TCP connections
       - name: Wait for Postgres to be ready
         run: |
           echo "Waiting for Postgres on 127.0.0.1:5432 (db=strivo_test, user=postgres)"
