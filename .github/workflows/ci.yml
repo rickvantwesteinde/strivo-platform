@@ -1,7 +1,7 @@
 name: CI
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch: {}          # handmatig kunnen starten via Actions-tab
   pull_request:
     branches: [ main ]
   push:
@@ -40,18 +40,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Ruby en Bundler (matcht jouw project)
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.3.5'
-          bundler-cache: true
+          bundler-cache: false   # we installeren eerst system deps
 
-      - name: Ensure Bundler 2.5.18
+      # Systeempakketten die bundling/boot nodig heeft
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config \
+                                  libpq-dev postgresql-client \
+                                  libvips
+
+      # Bundler vastzetten en gems installeren (dev/test NIET uitsluiten)
+      - name: Install gems
         run: |
           gem install bundler -v 2.5.18
-          bundle _2.5.18_ --version
+          bundle _2.5.18_ install --jobs 4 --retry 3
 
+      # DB klaarzetten
       - name: Prepare DB
         run: bin/rails db:prepare
 
+      # Tests
       - name: RSpec
         run: bundle exec rspec --format documentation --backtrace
