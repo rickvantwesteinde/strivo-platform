@@ -2,12 +2,13 @@
 
 module Storefront
   class BaseController < ApplicationController
-    # Zorg dat Devise/Spree helpers beschikbaar zijn
+    # Houd helpers beschikbaar
     include Devise::Controllers::Helpers
     include Spree::Core::ControllerHelpers::Auth
     include Storefront::CreditsHelper
 
-    before_action :authenticate_spree_user!
+    # Enige guard die we willen: redirect ALTIJD naar spree_login_path
+    before_action :require_spree_login
 
     helper Storefront::CreditsHelper
     helper_method :default_gym, :current_spree_user
@@ -21,31 +22,16 @@ module Storefront
       nil
     end
 
-    # Eenduidige auth-guard die ALTIJD redirect i.p.v. action uitvoeren
-    def authenticate_spree_user!
+    # <<< Belangrijk: simpele guard die exact naar spree_login_path gaat >>>
+    def require_spree_login
       signed_in =
         (respond_to?(:spree_user_signed_in?, true) && spree_user_signed_in?) ||
         current_spree_user.present?
 
       return if signed_in
 
-      store_location if respond_to?(:store_location, true)
-      redirect_to login_redirect_path
-    end
-
-    # Kies login route die in Spree aanwezig is (fallback naar Devise of /login)
-    def login_redirect_path
-      helpers = Spree::Core::Engine.routes.url_helpers
-
-      if helpers.respond_to?(:spree_login_path)
-        helpers.spree_login_path
-      elsif helpers.respond_to?(:new_spree_user_session_path)
-        helpers.new_spree_user_session_path
-      elsif defined?(main_app) && main_app.respond_to?(:new_user_session_path)
-        main_app.new_user_session_path
-      else
-        '/login'
-      end
+      # Dit is de helper die je in config/initializers/url_helper_aliases.rb hebt aangemaakt
+      redirect_to spree_login_path
     end
 
     def default_gym
