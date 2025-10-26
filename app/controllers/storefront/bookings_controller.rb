@@ -4,7 +4,9 @@ module Storefront
   class BookingsController < BaseController
     def create
       session_record = Session.find(params[:session_id])
-      BookingManager.new(session: session_record, user: current_spree_user).book!
+      manager = BookingManager.new(session: session_record, user: current_spree_user)
+      manager.book!
+
       redirect_to storefront_session_path(session_record),
                   notice: I18n.t('storefront.bookings.created', default: 'Boeking aangemaakt.')
     rescue BookingManager::BookingError => e
@@ -12,8 +14,11 @@ module Storefront
     end
 
     def destroy
-      booking = Booking.find(params[:id])
-      BookingManager.new(session: booking.session, user: current_spree_user).cancel!(booking)
+      # Haal alleen boekingen op die van de huidige user zijn
+      booking  = current_spree_user.bookings.find(params[:id])
+      manager  = BookingManager.new(session: booking.session, user: current_spree_user)
+      manager.cancel!(booking: booking) # expliciet keyword, maar ondersteunt nu ook positioneel
+
       redirect_to storefront_session_path(booking.session),
                   notice: I18n.t('storefront.bookings.canceled', default: 'Boeking geannuleerd.')
     rescue BookingManager::BookingError => e
