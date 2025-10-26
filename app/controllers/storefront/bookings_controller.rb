@@ -4,7 +4,7 @@ module Storefront
   class BookingsController < BaseController
     def create
       session = Session.find(params[:session_id])
-      manager = BookingManager.new(session:, user: current_spree_user)
+      manager = BookingManager.new(session: session, user: current_spree_user)
       manager.book!
       flash[:notice] = t('.success', default: 'Boeking bevestigd!')
       redirect_to storefront_session_path(session)
