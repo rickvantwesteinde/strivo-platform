@@ -2,12 +2,9 @@
 
 module Storefront
   module Account
-    class BookingsController < Storefront::BaseController
+    class BookingsController < BaseController
       def index
-        @bookings = current_spree_user.bookings
-                                      .includes(:session)
-                                      .order(created_at: :desc)
-        @credits = CreditLedger.where(user: current_spree_user).sum(:amount)
+        @bookings = current_spree_user.bookings.includes(:session).order(created_at: :desc)
       end
     end
   end
