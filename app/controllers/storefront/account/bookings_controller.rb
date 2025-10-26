@@ -2,7 +2,7 @@
 
 module Storefront
   module Account
-    class BookingsController < BaseController
+    class BookingsController < Storefront::BaseController
       def index
         @bookings = current_spree_user.bookings.includes(:session).order(created_at: :desc)
       end
