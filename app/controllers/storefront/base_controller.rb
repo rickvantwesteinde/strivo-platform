@@ -1,7 +1,8 @@
-# app/controllers/storefront/base_controller.rb
+# frozen_string_literal: true
+
 module Storefront
   class BaseController < ApplicationController
-    include Devise::Controllers::Helpers        # 👈 voeg deze regel toe
+    include Devise::Controllers::Helpers
     include Storefront::CreditsHelper
 
     before_action :authenticate_spree_user!
