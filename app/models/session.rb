@@ -15,7 +15,7 @@ class Session < ApplicationRecord
   end
 
   def confirmed_bookings
-    bookings.confirmed
+    bookings.status_confirmed
   end
 
   def spots_taken
