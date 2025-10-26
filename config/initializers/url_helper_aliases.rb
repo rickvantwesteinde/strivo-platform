@@ -1,8 +1,10 @@
 # config/initializers/url_helper_aliases.rb
-# Zorg dat spree_login_path altijd bestaat — ongeacht Spree-versie / route-namen.
+# Zorg dat spree_login_path overal beschikbaar is (controllers, views, specs)
 Rails.application.config.to_prepare do
-  app_helpers = Rails.application.routes.url_helpers
+  app_helpers   = Rails.application.routes.url_helpers
+  spree_helpers = Spree::Core::Engine.routes.url_helpers
 
+  # Definieer spree_login_path als hij niet bestaat
   unless app_helpers.method_defined?(:spree_login_path)
     app_helpers.module_eval do
       def spree_login_path
@@ -20,4 +22,8 @@ Rails.application.config.to_prepare do
       end
     end
   end
+
+  # <<-- Dit is de extra stap die nog miste
+  # Voeg ook toe aan ApplicationController, zodat alle controllers/views 'm kennen
+  ApplicationController.helper_method :spree_login_path if ApplicationController.method_defined?(:helper_method)
 end
