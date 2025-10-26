@@ -1,5 +1,7 @@
+# app/controllers/storefront/base_controller.rb
 module Storefront
   class BaseController < ApplicationController
+    include Devise::Controllers::Helpers        # 👈 voeg deze regel toe
     include Storefront::CreditsHelper
 
     before_action :authenticate_spree_user!
