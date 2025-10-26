@@ -5,9 +5,10 @@ module Storefront
     def show
       @session = Session.find(params[:id])
 
-      # Bepaal of huidige user al geboekt heeft (spec kijkt hiernaar)
-      @existing_booking = @session.bookings.find_by(user: current_spree_user, status: :confirmed)
-      @already_booked   = @existing_booking.present?
+      # Data die de view/spec verwacht
+      @occupancy = @session.bookings.where(status: :confirmed).count
+      @spots_left = @session.spots_left
+      @booking   = @session.bookings.find_by(user: current_spree_user, status: :confirmed)
     end
   end
 end
