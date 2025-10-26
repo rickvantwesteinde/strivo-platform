@@ -3,25 +3,21 @@
 module Storefront
   class BookingsController < BaseController
     def create
-      session = Session.find(params[:session_id])
-      manager = BookingManager.new(session: session, user: current_spree_user)
-      manager.book!
-      flash[:notice] = t('.success', default: 'Boeking bevestigd!')
-      redirect_to storefront_session_path(session)
+      session_record = Session.find(params[:session_id])
+      BookingManager.new(session: session_record, user: current_spree_user).book!
+      redirect_to storefront_session_path(session_record),
+                  notice: I18n.t('storefront.bookings.created', default: 'Boeking aangemaakt.')
     rescue BookingManager::BookingError => e
-      flash[:alert] = e.message
-      redirect_to storefront_session_path(session)
+      redirect_to storefront_session_path(session_record), alert: e.message
     end
 
     def destroy
-      booking = current_spree_user.bookings.find(params[:id])
-      manager = BookingManager.new(session: booking.session, user: current_spree_user)
-      manager.cancel!(booking: booking)
-      flash[:notice] = t('.success', default: 'Boeking geannuleerd.')
-      redirect_to storefront_session_path(booking.session)
+      booking = Booking.find(params[:id])
+      BookingManager.new(session: booking.session, user: current_spree_user).cancel!(booking)
+      redirect_to storefront_session_path(booking.session),
+                  notice: I18n.t('storefront.bookings.canceled', default: 'Boeking geannuleerd.')
     rescue BookingManager::BookingError => e
-      flash[:alert] = e.message
-      redirect_to storefront_session_path(booking.session)
+      redirect_to storefront_session_path(booking.session), alert: e.message
     end
   end
 end
