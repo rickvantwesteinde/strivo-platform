@@ -1,15 +1,17 @@
+# frozen_string_literal: true
+
 class BookingManager
   class BookingError < StandardError; end
 
   def initialize(session:, user:)
     @session = session
-    @user = user
+    @user    = user
   end
 
   def book!
-    raise BookingError, I18n.t('storefront.bookings.full', default: 'Deze sessie is vol.') if session.full?
-    raise BookingError, I18n.t('storefront.bookings.already_booked', default: 'Je hebt deze sessie al geboekt.') if existing_booking
-    raise BookingError, I18n.t('storefront.bookings.no_credits', default: 'Onvoldoende credits.') unless credits_available?
+    raise BookingError, I18n.t('storefront.bookings.full',           default: 'Deze sessie is vol.')               if session.full?
+    raise BookingError, I18n.t('storefront.bookings.already_booked', default: 'Je hebt deze sessie al geboekt.')   if existing_booking
+    raise BookingError, I18n.t('storefront.bookings.no_credits',     default: 'Onvoldoende credits.')              unless credits_available?
 
     Booking.transaction do
       booking = session.bookings.create!(user:, status: :confirmed)
@@ -18,10 +20,13 @@ class BookingManager
     end
   end
 
-  def cancel!(booking:)
-    raise BookingError, I18n.t('storefront.bookings.not_owner', default: 'Deze boeking is niet van jou.') if booking.user != user
+  # Laat zowel cancel!(booking) als cancel!(booking: booking) toe
+  def cancel!(arg = nil, booking: nil)
+    booking ||= arg
+
+    raise BookingError, I18n.t('storefront.bookings.not_owner',        default: 'Deze boeking is niet van jou.')   if booking.user != user
     raise BookingError, I18n.t('storefront.bookings.already_canceled', default: 'Deze boeking is al geannuleerd.') if booking.status_canceled?
-    raise BookingError, I18n.t('storefront.bookings.already_started', default: 'De sessie is al gestart.') if session.started?
+    raise BookingError, I18n.t('storefront.bookings.already_started',  default: 'De sessie is al gestart.')        if session.started?
 
     Booking.transaction do
       booking.update!(status: :canceled, canceled_at: Time.current)
