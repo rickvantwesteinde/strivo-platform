@@ -2,7 +2,7 @@
 
 module Storefront
   class BaseController < ApplicationController
-    # Houd helpers beschikbaar
+    # Zorg dat Devise/Spree helpers beschikbaar zijn
     include Devise::Controllers::Helpers
     include Spree::Core::ControllerHelpers::Auth
     include Storefront::CreditsHelper
@@ -22,7 +22,7 @@ module Storefront
       nil
     end
 
-    # <<< Belangrijk: simpele guard die exact naar spree_login_path gaat >>>
+    # Simpele guard die exact naar spree_login_path redirect
     def require_spree_login
       signed_in =
         (respond_to?(:spree_user_signed_in?, true) && spree_user_signed_in?) ||
@@ -30,7 +30,6 @@ module Storefront
 
       return if signed_in
 
-      # Dit is de helper die je in config/initializers/url_helper_aliases.rb hebt aangemaakt
       redirect_to spree_login_path
     end
 
