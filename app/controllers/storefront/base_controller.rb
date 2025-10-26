@@ -2,7 +2,8 @@
 
 module Storefront
   class BaseController < ApplicationController
-    include Devise::Controllers::Helpers
+    # 🔑 Voeg Spree authenticatie toe
+    include Spree::Core::ControllerHelpers::Auth
     include Storefront::CreditsHelper
 
     before_action :authenticate_spree_user!
