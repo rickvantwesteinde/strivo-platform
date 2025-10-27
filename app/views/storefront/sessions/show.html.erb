@@ -1,0 +1,21 @@
+<h1><%= @session.class_type.name %></h1>
+
+<p><strong>Wanneer:</strong> <%= l(@session.starts_at, format: :long) %> - <%= l(@session.ends_at, format: :long) %></p>
+<p><strong>Locatie:</strong> <%= @session.gym %></p>
+<% if @session.trainer_name.present? %>
+  <p><strong>Trainer:</strong> <%= @session.trainer_name %></p>
+<% end %>
+<p><strong>Capaciteit:</strong> <%= @session.capacity %></p>
+<p><strong>Ingeschreven:</strong> <%= @occupancy %> / <%= @session.capacity %></p>
+<p><strong>Vrije plekken:</strong> <%= @spots_left %></p>
+
+<% if @booking.present? %>
+  <p>Je bent ingeschreven voor deze sessie.</p>
+  <%= button_to 'Annuleer', storefront_booking_path(@booking), method: :delete, data: { confirm: 'Weet je het zeker?' } %>
+<% elsif @session.full? %>
+  <p>Deze sessie is vol.</p>
+<% else %>
+  <%= button_to 'Boek', storefront_bookings_path(session_id: @session.id), method: :post %>
+<% end %>
+
+<p><%= link_to 'Terug naar lessen', storefront_classes_path %></p>

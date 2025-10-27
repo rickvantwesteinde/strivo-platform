@@ -8,4 +8,7 @@ class Spree::User < Spree.base_class
   include Spree::UserAddress
   include Spree::UserMethods
   include Spree::UserPaymentSource
+
+  has_many :bookings, dependent: :destroy, foreign_key: :user_id
+  has_many :credit_ledgers, dependent: :destroy, foreign_key: :user_id
 end

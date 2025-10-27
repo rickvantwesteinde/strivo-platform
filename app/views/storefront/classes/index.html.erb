@@ -1,0 +1,28 @@
+<h1>Lessen</h1>
+
+<% @class_types.each do |class_type| %>
+  <section class="class-type">
+    <h2><%= class_type.name %></h2>
+    <% if class_type.description.present? %>
+      <p><%= class_type.description %></p>
+    <% end %>
+
+    <% sessions = @sessions_by_class_type[class_type.id] || [] %>
+    <% if sessions.any? %>
+      <ul class="sessions">
+        <% sessions.each do |session| %>
+          <li>
+            <strong><%= l(session.starts_at, format: :long) %></strong>
+            <% if session.trainer_name.present? %>
+              &mdash; <span>Trainer: <%= session.trainer_name %></span>
+            <% end %>
+            <span>(<%= session.spots_left %> plekken vrij)</span>
+            <%= link_to 'Details', storefront_session_path(session) %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>Geen sessies gepland in de komende weken.</p>
+    <% end %>
+  </section>
+<% end %>
