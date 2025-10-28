@@ -57,13 +57,14 @@ class CreateCoreDomain < ActiveRecord::Migration[8.0]
     create_table :subscriptions, if_not_exists: true do |t|
       t.references :gym,  null: false, foreign_key: true
       t.references :user, null: false, foreign_key: { to_table: :spree_users }
-      t.references :plan, null: false, foreign_key: { to_table: :subscription_plans }
+      # Use subscription_plan instead of plan to match the model's foreign_key
+      t.references :subscription_plan, null: false, foreign_key: true
       t.date     :starts_on, null: false
       t.string   :status,    null: false, default: 'active'
       t.datetime :ended_at
       t.timestamps
       t.index %i[user_id gym_id status]
-      t.index %i[user_id plan_id starts_on]
+      t.index %i[user_id subscription_plan_id starts_on]
     end
 
     # == Sessions ==
