@@ -1,28 +1,22 @@
 # app/models/session.rb
 class Session < ApplicationRecord
-  # Associations
   belongs_to :class_type
   belongs_to :trainer
 
   has_many :bookings, dependent: :destroy
   has_many :waitlist_entries, dependent: :destroy
 
-  # Delegate gym via class_type
   delegate :gym, to: :class_type
 
-  # Validations
   validates :starts_at, :duration_minutes, presence: true
   validates :capacity, numericality: { greater_than: 0 }
 
-  # Callbacks
   before_validation :apply_default_capacity
 
-  # Scopes
   scope :upcoming, ->(until_time: 2.weeks.from_now) {
     where(starts_at: Time.current..until_time).order(:starts_at)
   }
 
-  # Helpers
   def ends_at
     starts_at + duration_minutes.minutes
   end
@@ -44,7 +38,7 @@ class Session < ApplicationRecord
   end
 
   def cutoff_time
-    starts_at - cancellation_cutoff_hours.hours
+    starts_at - (gym.policy&.cancel_cutoff_hours || 6).hours
   end
 
   def cutoff_passed?
@@ -57,11 +51,6 @@ class Session < ApplicationRecord
 
   def spots_remaining
     spots_left
-  end
-
-  # Cancellation cutoff: session-specific, fallback to gym policy, default 6
-  def cancellation_cutoff_hours
-    read_attribute(:cancellation_cutoff_hours) || gym.policy&.cancel_cutoff_hours || 6
   end
 
   private
