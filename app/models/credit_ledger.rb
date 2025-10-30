@@ -5,15 +5,13 @@ class CreditLedger < ApplicationRecord
   belongs_to :booking, optional: true
 
   # Redenen waarom credits veranderen
-  enum :reason,
-       {
-         monthly_grant: 0,
-         booking_charge: 1,
-         booking_refund: 2,
-         rollover_expiry: 3,
-         manual_adjustment: 4
-       },
-       prefix: true
+  enum :reason, %i[
+    monthly_grant
+    booking_charge
+    booking_refund
+    rollover_expiry
+    manual_adjustment
+  ], prefix: true
 
   validates :amount, presence: true
 
