@@ -7,22 +7,19 @@ RSpec.describe 'Storefront::Bookings', type: :request do
   let(:password) { 'Password1!' }
   let(:user) { Spree::User.create!(email: 'user@example.com', password:, password_confirmation: password) }
   let(:gym) { Gym.create!(name: 'Strivo HQ', slug: 'strivo-hq') }
-  let(:policy) { Policy.create!(gym: gym, cancel_cutoff_hours: 6, rollover_limit: 2, max_active_daily_bookings: 1) }
-  let(:plan) { SubscriptionPlan.create!(gym: gym, name: 'Basic', per_week: 3) }
-  let(:subscription) { Subscription.create!(gym: gym, user: user, subscription_plan: plan, starts_on: 1.month.ago, status: :active) }
   let(:class_type) { ClassType.create!(gym: gym, name: 'HIIT', default_capacity: 8) }
+  let(:trainer) { Trainer.create!(gym: gym, user: Spree::User.create!(email: 't@example.com', password: password)) }
   let(:session_record) do
     Session.create!(
       class_type: class_type,
-      trainer: Trainer.create!(gym: gym, user: Spree::User.create!(email: 'trainer@example.com', password: password)),
+      trainer: trainer,
       starts_at: 3.days.from_now.change(hour: 10),
-      capacity: 8,
-      cancellation_cutoff_hours: 6
+      capacity: 8
     )
   end
 
   before do
-    policy
+    gym.create_policy!(cancel_cutoff_hours: 6, rollover_limit: 2, max_active_daily_bookings: 1)
     CreditLedger.create!(user: user, gym: gym, amount: 5, reason: :monthly_grant)
   end
 
