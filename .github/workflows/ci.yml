@@ -66,7 +66,6 @@ jobs:
           bundle config unset without || true
           bundle config set without 'production'
           bundle _2.5.18_ install --jobs 4 --retry 3
-          bundle _2.5.18_ list | grep rspec || true
 
       - name: Fix bin permissions (CI)
         run: chmod +x bin/* || true
@@ -86,9 +85,12 @@ jobs:
           docker ps -a --format "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}"
           exit 1
 
-      - name: Prepare DB (trace + retry)
+      # ⬇️ Belangrijk: schone reset + migraties, GEEN db:prepare
+      - name: DB reset & migrate (clean)
         run: |
-          bundle exec rails db:prepare --trace || (sleep 5 && bundle exec rails db:prepare --trace)
+          bundle exec rails db:drop db:create db:migrate --trace
+          # Als je seeds nodig hebt voor tests, haal dan het commentaar van de volgende regel:
+          # bundle exec rails db:seed --trace
 
       - name: RSpec
         run: bundle exec rspec --format documentation --backtrace
