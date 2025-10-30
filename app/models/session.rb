@@ -59,6 +59,11 @@ class Session < ApplicationRecord
     spots_left
   end
 
+  # Cancellation cutoff: session-specific, fallback to gym policy, default 6
+  def cancellation_cutoff_hours
+    read_attribute(:cancellation_cutoff_hours) || gym.policy&.cancel_cutoff_hours || 6
+  end
+
   private
 
   def apply_default_capacity
