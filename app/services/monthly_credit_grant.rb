@@ -13,7 +13,7 @@ class MonthlyCreditGrant
 
     ActiveRecord::Base.transaction do
       apply_rollover_limit(month)
-      grant_credits(month)
+      grant_monthly_credits(month)
     end
   end
 
@@ -34,11 +34,11 @@ class MonthlyCreditGrant
       user: subscription.user,
       amount: -excess,
       reason: :rollover_expiry,
-      metadata: { month: month.iso8601 }
+      metadata: { month: month.iso8601, subscription_id: subscription.id }
     )
   end
 
-  def grant_credits(month)
+  def grant_monthly_credits(month)
     amount = (subscription.subscription_plan.per_week * (as_of.end_of_month.day / 7.0)).round(half: :up)
     CreditLedger.create!(
       gym: subscription.gym,
