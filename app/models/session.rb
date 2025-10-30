@@ -2,16 +2,18 @@
 class Session < ApplicationRecord
   # Associations
   belongs_to :class_type
-  belongs_to :gym
   belongs_to :trainer
 
   has_many :bookings, dependent: :destroy
   has_many :waitlist_entries, dependent: :destroy
 
+  # Delegate gym access through class_type
+  delegate :gym, to: :class_type
+
   # Validations
   validates :starts_at, :duration_minutes, presence: true
   validates :capacity, numericality: { greater_than: 0 }
-  validate  :gym_matches_class_type
+  # Removed: gym_matches_class_type — no longer needed
 
   # Callbacks
   before_validation :apply_default_capacity
@@ -27,11 +29,11 @@ class Session < ApplicationRecord
   end
 
   def confirmed_bookings
-    # booking enum gebruikt prefix (status_confirmed)
+    # booking enum uses prefix (status_confirmed)
     bookings.status_confirmed
   end
 
-  # Consistente naming (behoud main-variants) + compat voor core
+  # Consistent naming + backward compatibility
   def spots_taken
     confirmed_bookings.count
   end
@@ -44,7 +46,6 @@ class Session < ApplicationRecord
     spots_left.zero?
   end
 
-  # Voor annulering/cutoff-logica (kolom of attribuut aanwezig in je schema)
   def cutoff_time
     starts_at - cancellation_cutoff_hours.hours
   end
@@ -57,7 +58,7 @@ class Session < ApplicationRecord
     Time.current >= starts_at
   end
 
-  # Backwards compat voor code die 'spots_remaining' verwacht
+  # Backward compat for code expecting 'spots_remaining'
   def spots_remaining
     spots_left
   end
@@ -65,11 +66,8 @@ class Session < ApplicationRecord
   private
 
   def apply_default_capacity
-    self.capacity ||= class_type&.capacity
+    self.capacity ||= class_type&.default_capacity
   end
 
-  def gym_matches_class_type
-    return if class_type.nil? || gym_id == class_type.gym_id
-    errors.add(:gym_id, 'must match class type gym')
-  end
+  # Removed: gym_matches_class_type — redundant with class_type → gym relationship
 end
