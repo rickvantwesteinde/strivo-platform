@@ -1,6 +1,5 @@
 # app/models/booking.rb
 class Booking < ApplicationRecord
-  # Associations
   belongs_to :gym
   belongs_to :user, class_name: 'Spree::User'
   belongs_to :session
@@ -8,17 +7,13 @@ class Booking < ApplicationRecord
 
   has_many :credit_ledgers, dependent: :nullify
 
-  # Status
   enum :status, { confirmed: 0, canceled: 1 }, prefix: true
 
-  # Validations
   validates :session_id, uniqueness: { scope: :user_id }
   validates :used_credits, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
-  # Callbacks
   before_validation :sync_gym_and_plan
 
-  # Scopes
   scope :active_on_day, ->(user, date) {
     status_confirmed
       .where(user: user)
@@ -38,7 +33,6 @@ class Booking < ApplicationRecord
       .order('sessions.starts_at DESC')
   }
 
-  # Commands
   def cancel!(canceled_at: Time.current)
     update!(status: :canceled, canceled_at: canceled_at)
   end
@@ -47,15 +41,9 @@ class Booking < ApplicationRecord
 
   def sync_gym_and_plan
     self.gym ||= session.gym
-
     return if subscription_plan.present?
 
-    sub = user.subscriptions
-               .active
-               .for_gym(gym)
-               .order(starts_on: :desc)
-               .first
-
+    sub = user.subscriptions.active.for_gym(gym).order(starts_on: :desc).first
     self.subscription_plan = sub&.subscription_plan
   end
 end
