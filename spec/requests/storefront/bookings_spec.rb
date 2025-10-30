@@ -16,12 +16,13 @@ RSpec.describe 'Storefront::Bookings', type: :request do
       class_type: class_type,
       trainer: Trainer.create!(gym: gym, user: Spree::User.create!(email: 'trainer@example.com', password: password)),
       starts_at: 3.days.from_now.change(hour: 10),
-      capacity: 8
+      capacity: 8,
+      cancellation_cutoff_hours: 6
     )
   end
 
   before do
-    policy # create
+    policy
     CreditLedger.create!(user: user, gym: gym, amount: 5, reason: :monthly_grant)
   end
 
