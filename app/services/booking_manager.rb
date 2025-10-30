@@ -19,8 +19,18 @@ class BookingManager
     subscription = find_subscription!
     policy = session.gym.policy || raise(Error, "Policy missing")
 
-    ensure_capacity!(from_waitlist)
-    ensure_limits!(subscription, policy)
+    if subscription.unlimited?
+      ensure_daily_limit!(policy)
+    else
+      ensure_credits_available!
+    end
+
+    if session.spots_left <= 0 && !from_waitlist
+      waitlist_entry = WaitlistEntry.find_or_create_by!(session: session, user: user)
+      return BookingResult.new(waitlist_entry: waitlist_entry, waitlisted: true)
+    end
+
+    raise CapacityError, "Session full" if session.spots_left <= 0
 
     booking = create_booking(subscription)
     BookingResult.new(booking: booking, waitlisted: false)
@@ -31,9 +41,13 @@ class BookingManager
       if no_show
         booking.update!(no_show: true)
         return booking
+      else
+        booking.cancel!(canceled_at: canceled_at)
       end
 
-      booking.cancel!(canceled_at: canceled_at)
+      policy = booking.gym.policy || raise(Error, "Policy missing")
+      maybe_refund!(booking: booking, canceled_at: canceled_at)
+
       promote_from_waitlist if booking.session.spots_left > 0
     end
   end
@@ -48,30 +62,61 @@ class BookingManager
     scope.order(:starts_on).last || raise(SubscriptionRequiredError)
   end
 
-  def ensure_capacity!(from_waitlist)
-    return if from_waitlist
-    return if session.spots_left > 0
-    waitlist_entry = WaitlistEntry.find_or_create_by!(session: session, user: user)
-    raise CapacityError, BookingResult.new(waitlist_entry: waitlist_entry, waitlisted: true)
+  def ensure_credits_available!
+    balance = CreditLedger.balance_for(user: user, gym: session.gym)
+    raise CreditError, "Insufficient credits" if balance <= 0
   end
 
-  def ensure_limits!(subscription, policy)
-    return if subscription.unlimited?
-    balance = CreditLedger.balance_for(user: user, gym: session.gym)
-    raise CreditError, "No credits" if balance <= 0
-
+  def ensure_daily_limit!(policy)
     daily = Booking.active_on_day(user, session.starts_at.to_date).count
     raise DailyLimitError if daily >= policy.max_active_daily_bookings
   end
 
   def create_booking(subscription)
-    Booking.create!(
+    used_credits = subscription.unlimited? ? 0 : 1
+
+    booking = Booking.create!(
       gym: session.gym,
       user: user,
       session: session,
       subscription_plan: subscription.subscription_plan,
       status: :confirmed,
-      used_credits: subscription.unlimited? ? 0 : 1
+      used_credits: used_credits
+    )
+
+    log_booking_charge(booking: booking, subscription: subscription)
+    booking
+  end
+
+  def log_booking_charge(booking:, subscription:)
+    amount = subscription.unlimited? ? 0 : -booking.used_credits
+
+    CreditLedger.create!(
+      gym: booking.gym,
+      user: booking.user,
+      booking: booking,
+      amount: amount,
+      reason: :booking_charge,
+      metadata: {
+        session_id: booking.session_id,
+        subscription_plan_id: subscription.subscription_plan_id,
+        unlimited: subscription.unlimited?
+      }
+    )
+  end
+
+  def maybe_refund!(booking:, canceled_at:)
+    return if booking.subscription_plan&.unlimited?
+
+    return unless canceled_at < booking.session.cutoff_time
+
+    CreditLedger.create!(
+      gym: booking.gym,
+      user: booking.user,
+      booking: booking,
+      amount: booking.used_credits,
+      reason: :booking_refund,
+      metadata: { session_id: booking.session_id, canceled_at: canceled_at }
     )
   end
 
@@ -82,7 +127,7 @@ class BookingManager
       entry.destroy!
       result
     end
-  rescue CreditError, DailyLimitError
+  rescue CreditError, DailyLimitError, SubscriptionRequiredError
     entry.destroy!
     promote_from_waitlist
   end
