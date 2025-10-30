@@ -3,7 +3,7 @@ class Subscription < ApplicationRecord
   belongs_to :user, class_name: "Spree::User"
   belongs_to :plan, class_name: "SubscriptionPlan", foreign_key: :subscription_plan_id
 
-  enum status: { active: 0, paused: 1, canceled: 2 }
+  enum :status, %i[active paused canceled]
 
   validates :starts_on, presence: true
 
