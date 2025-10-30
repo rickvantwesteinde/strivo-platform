@@ -57,7 +57,6 @@ class CreateCoreDomain < ActiveRecord::Migration[8.0]
     create_table :subscriptions, if_not_exists: true do |t|
       t.references :gym,  null: false, foreign_key: true
       t.references :user, null: false, foreign_key: { to_table: :spree_users }
-      # Use subscription_plan instead of plan to match the model's foreign_key
       t.references :subscription_plan, null: false, foreign_key: true
       t.date     :starts_on, null: false
       t.string   :status,    null: false, default: 'active'
@@ -70,14 +69,15 @@ class CreateCoreDomain < ActiveRecord::Migration[8.0]
     # == Sessions ==
     create_table :sessions, if_not_exists: true do |t|
       t.references :class_type, null: false, foreign_key: true
-      t.references :gym,        null: false, foreign_key: true
+      # gym_id removed – gym is reachable via class_type → gym
       t.references :trainer,    null: false, foreign_key: true
       t.datetime :starts_at, null: false
       t.integer  :duration_minutes, null: false, default: 60
       t.integer  :capacity,         null: false, default: 14
       t.integer  :cancellation_cutoff_hours, null: false, default: 6
       t.timestamps
-      t.index %i[gym_id starts_at]
+
+      # Index on gym_id removed – not needed
       t.index %i[class_type_id starts_at]
     end
 
