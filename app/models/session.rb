@@ -7,13 +7,12 @@ class Session < ApplicationRecord
   has_many :bookings, dependent: :destroy
   has_many :waitlist_entries, dependent: :destroy
 
-  # Delegate gym access through class_type
+  # Delegate gym via class_type
   delegate :gym, to: :class_type
 
   # Validations
   validates :starts_at, :duration_minutes, presence: true
   validates :capacity, numericality: { greater_than: 0 }
-  # Removed: gym_matches_class_type — no longer needed
 
   # Callbacks
   before_validation :apply_default_capacity
@@ -29,11 +28,9 @@ class Session < ApplicationRecord
   end
 
   def confirmed_bookings
-    # booking enum uses prefix (status_confirmed)
     bookings.status_confirmed
   end
 
-  # Consistent naming + backward compatibility
   def spots_taken
     confirmed_bookings.count
   end
@@ -58,7 +55,6 @@ class Session < ApplicationRecord
     Time.current >= starts_at
   end
 
-  # Backward compat for code expecting 'spots_remaining'
   def spots_remaining
     spots_left
   end
@@ -68,6 +64,4 @@ class Session < ApplicationRecord
   def apply_default_capacity
     self.capacity ||= class_type&.default_capacity
   end
-
-  # Removed: gym_matches_class_type — redundant with class_type → gym relationship
 end
