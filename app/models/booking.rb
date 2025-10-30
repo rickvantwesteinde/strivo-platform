@@ -17,8 +17,6 @@ class Booking < ApplicationRecord
 
   # Callbacks
   before_validation :sync_gym_and_plan
-  after_create :consume_credits, unless: :unlimited?
-  after_update :refund_credits, if: :canceled_before_cutoff?
 
   # Scopes
   scope :active_on_day, ->(user, date) {
@@ -45,48 +43,19 @@ class Booking < ApplicationRecord
     update!(status: :canceled, canceled_at: canceled_at)
   end
 
-  def unlimited?
-    subscription_plan&.unlimited?
-  end
-
   private
 
   def sync_gym_and_plan
     self.gym ||= session.gym
+
     return if subscription_plan.present?
 
-    current_sub = user.subscriptions.active.for_gym(gym).first
-    self.subscription_plan = current_sub&.subscription_plan
-  end
+    sub = user.subscriptions
+               .active
+               .for_gym(gym)
+               .order(starts_on: :desc)
+               .first
 
-  def consume_credits
-    return if unlimited?
-    CreditLedger.create!(
-      gym: gym,
-      user: user,
-      booking: self,
-      reason: :booking_charge,
-      amount: -1,
-      metadata: { session_id: session_id }
-    )
-    update_column(:used_credits, 1)
-  end
-
-  def refund_credits
-    return if unlimited?
-    CreditLedger.create!(
-      gym: gym,
-      user: user,
-      booking: self,
-      reason: :booking_refund,
-      amount: 1,
-      metadata: { session_id: session_id, canceled_at: canceled_at }
-    )
-  end
-
-  def canceled_before_cutoff?
-    saved_change_to_status? &&
-      status_canceled? &&
-      canceled_at < session.cutoff_time
+    self.subscription_plan = sub&.subscription_plan
   end
 end
