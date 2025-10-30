@@ -45,9 +45,7 @@ class BookingManager
         booking.cancel!(canceled_at: canceled_at)
       end
 
-      policy = booking.gym.policy || raise(Error, "Policy missing")
       maybe_refund!(booking: booking, canceled_at: canceled_at)
-
       promote_from_waitlist if booking.session.spots_left > 0
     end
   end
@@ -107,7 +105,6 @@ class BookingManager
 
   def maybe_refund!(booking:, canceled_at:)
     return if booking.subscription_plan&.unlimited?
-
     return unless canceled_at < booking.session.cutoff_time
 
     CreditLedger.create!(
