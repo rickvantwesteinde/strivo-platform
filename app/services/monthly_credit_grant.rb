@@ -1,3 +1,4 @@
+# app/services/monthly_credit_grant.rb
 class MonthlyCreditGrant
   def initialize(subscription:, as_of: Date.current)
     @subscription = subscription
@@ -5,15 +6,14 @@ class MonthlyCreditGrant
   end
 
   def call
-    return if subscription.unlimited?
-    return unless subscription.active_on?(as_of)
+    return if subscription.unlimited? || !subscription.active_on?(as_of)
 
     month = as_of.beginning_of_month
-    return if CreditLedger.monthly_grant_exists?(subscription:, month: month)
+    return if CreditLedger.monthly_grant_exists?(subscription: subscription, month: month)
 
     ActiveRecord::Base.transaction do
       apply_rollover_limit(month)
-      grant_monthly_credits(month)
+      grant_credits(month)
     end
   end
 
@@ -22,35 +22,30 @@ class MonthlyCreditGrant
   attr_reader :subscription, :as_of
 
   def apply_rollover_limit(month)
-    policy = subscription.gym.policy
-    return unless policy&.rollover_limit&.positive?
+    policy = subscription.gym.policy or return
+    return unless policy.rollover_limit&.positive?
 
     balance = CreditLedger.balance_for(user: subscription.user, gym: subscription.gym)
-    allowed_rollover = [balance, policy.rollover_limit].min
-    expired_amount = balance - allowed_rollover
-    return if expired_amount <= 0
+    excess = [balance - policy.rollover_limit, 0].max
+    return if excess <= 0
 
     CreditLedger.create!(
       gym: subscription.gym,
       user: subscription.user,
-      amount: -expired_amount,
+      amount: -excess,
       reason: :rollover_expiry,
-      metadata: { month: month.iso8601, subscription_id: subscription.id }
+      metadata: { month: month.iso8601 }
     )
   end
 
-  def grant_monthly_credits(month)
+  def grant_credits(month)
+    amount = (subscription.subscription_plan.per_week * (as_of.end_of_month.day / 7.0)).round(half: :up)
     CreditLedger.create!(
       gym: subscription.gym,
       user: subscription.user,
-      amount: monthly_credit_amount,
+      amount: amount,
       reason: :monthly_grant,
       metadata: { month: month.iso8601, subscription_id: subscription.id }
     )
-  end
-
-  def monthly_credit_amount
-    days = as_of.end_of_month.day
-    (subscription.plan.per_week * (days / 7.0)).round(half: :up)
   end
 end
