@@ -2,7 +2,6 @@
 class BookingManager
   BookingResult = Struct.new(:booking, :waitlist_entry, :waitlisted, keyword_init: true)
 
-  # Domein-specifieke fouten
   class Error < StandardError; end
   class SubscriptionRequiredError < Error; end
   class CreditError < Error; end
@@ -14,49 +13,28 @@ class BookingManager
     @session = session
   end
 
-  # Boek een sessie. Zet op waitlist als vol (tenzij from_waitlist).
   def book(from_waitlist: false)
-    # Dubbelboeking voorkomen (snelle guard)
-    if existing_booking
-      return BookingResult.new(booking: existing_booking, waitlisted: false)
-    end
+    return BookingResult.new(booking: existing_booking, waitlisted: false) if existing_booking
 
     subscription = find_subscription!
-    policy = session.gym.policy or raise Error, "Policy missing for gym"
+    policy = session.gym.policy || raise(Error, "Policy missing")
 
-    if subscription.unlimited?
-      ensure_daily_limit!(policy)
-    else
-      ensure_credits_available!
-    end
-
-    # Indien vol en niet vanaf waitlist → naar wachtlijst
-    if session.spots_remaining <= 0 && !from_waitlist
-      waitlist_entry = WaitlistEntry.find_or_create_by!(session: session, user: user)
-      return BookingResult.new(waitlist_entry: waitlist_entry, waitlisted: true)
-    end
-
-    raise CapacityError, "Session full" if session.spots_remaining <= 0
+    ensure_capacity!(from_waitlist)
+    ensure_limits!(subscription, policy)
 
     booking = create_booking(subscription)
     BookingResult.new(booking: booking, waitlisted: false)
   end
 
-  # Annuleer of markeer als no-show.
-  # Codex-fix: bij no_show géén waitlist-promotie (er komt geen plek vrij).
   def cancel(booking:, canceled_at: Time.current, no_show: false)
     booking.transaction do
       if no_show
         booking.update!(no_show: true)
-        return booking # <<< Belangrijk: STOP, niet promoten
-      else
-        booking.cancel!(canceled_at: canceled_at)
+        return booking
       end
 
-      policy = booking.gym.policy or raise Error, "Policy missing for gym"
-      maybe_refund!(booking: booking, canceled_at: canceled_at, policy: policy)
-
-      promote_from_waitlist
+      booking.cancel!(canceled_at: canceled_at)
+      promote_from_waitlist if booking.session.spots_left > 0
     end
   end
 
@@ -64,102 +42,51 @@ class BookingManager
 
   attr_reader :user, :session
 
-  # Huidige (geldige) subscription voor de gym vinden
   def find_subscription!
-    scope = user.subscriptions
-    scope = scope.current if scope.respond_to?(:current)
+    scope = user.subscriptions.active
     scope = scope.for_gym(session.gym) if scope.respond_to?(:for_gym)
-
-    subscription = scope.order(starts_on: :desc).first
-    raise SubscriptionRequiredError, "Active subscription required" unless subscription
-
-    subscription
+    scope.order(:starts_on).last || raise(SubscriptionRequiredError)
   end
 
-  # Non-unlimited: check credits
-  def ensure_credits_available!
+  def ensure_capacity!(from_waitlist)
+    return if from_waitlist
+    return if session.spots_left > 0
+    waitlist_entry = WaitlistEntry.find_or_create_by!(session: session, user: user)
+    raise CapacityError, BookingResult.new(waitlist_entry: waitlist_entry, waitlisted: true)
+  end
+
+  def ensure_limits!(subscription, policy)
+    return if subscription.unlimited?
     balance = CreditLedger.balance_for(user: user, gym: session.gym)
-    raise CreditError, "Insufficient credits" if balance <= 0
+    raise CreditError, "No credits" if balance <= 0
+
+    daily = Booking.active_on_day(user, session.starts_at.to_date).count
+    raise DailyLimitError if daily >= policy.max_active_daily_bookings
   end
 
-  # Unlimited: max actieve boekingen per dag
-  def ensure_daily_limit!(policy)
-    daily_bookings = Booking.active_on_day(user, session.starts_at.to_date).where(gym: session.gym)
-    if daily_bookings.count >= policy.max_active_daily_bookings
-      raise DailyLimitError, "Daily limit reached"
-    end
-  end
-
-  # Boek aanmaken + creditcharge registreren
   def create_booking(subscription)
-    used_credits = subscription.unlimited? ? 0 : 1
-
-    booking = Booking.create!(
+    Booking.create!(
       gym: session.gym,
       user: user,
       session: session,
-      subscription_plan: subscription.plan,
+      subscription_plan: subscription.subscription_plan,
       status: :confirmed,
-      used_credits: used_credits
-    )
-
-    log_booking_charge(booking: booking, subscription: subscription)
-    booking
-  end
-
-  # Ledger entry voor charge (of 0 bij unlimited)
-  def log_booking_charge(booking:, subscription:)
-    amount = subscription.unlimited? ? 0 : -booking.used_credits
-
-    CreditLedger.create!(
-      gym: booking.gym,
-      user: booking.user,
-      booking: booking,
-      amount: amount,
-      reason: :booking_charge,
-      metadata: {
-        session_id: booking.session_id,
-        subscription_plan_id: subscription.plan_id,
-        unlimited: subscription.unlimited?
-      }
+      used_credits: subscription.unlimited? ? 0 : 1
     )
   end
 
-  # Refund alleen als vóór cutoff en niet-unlimited
-  def maybe_refund!(booking:, canceled_at:, policy:)
-    return if booking.subscription_plan&.unlimited?
-
-    cutoff_hours = policy.respond_to?(:cancel_cutoff_hours) ? (policy.cancel_cutoff_hours || 0) : 0
-    cutoff_time = booking.session.starts_at - cutoff_hours.hours
-    return unless canceled_at < cutoff_time
-
-    CreditLedger.create!(
-      gym: booking.gym,
-      user: booking.user,
-      booking: booking,
-      amount: booking.used_credits,
-      reason: :booking_refund,
-      metadata: { session_id: booking.session_id }
-    )
-  end
-
-  # Waitlist promotie (alleen aanroepen wanneer er daadwerkelijk plek vrij is)
   def promote_from_waitlist
-    entry = session.waitlist_entries.ordered.first
-    return unless entry
-
+    entry = session.waitlist_entries.ordered.first or return
     entry.with_lock do
       result = self.class.new(user: entry.user, session: session).book(from_waitlist: true)
       entry.destroy!
       result
-    rescue CreditError, DailyLimitError, SubscriptionRequiredError
-      # kan niet promoten → verwijder en probeer volgende
-      entry.destroy!
-      promote_from_waitlist
     end
+  rescue CreditError, DailyLimitError
+    entry.destroy!
+    promote_from_waitlist
   end
 
-  # Bestaat er al een confirmed booking voor deze user in deze sessie?
   def existing_booking
     @existing_booking ||= session.bookings.status_confirmed.find_by(user: user)
   end
