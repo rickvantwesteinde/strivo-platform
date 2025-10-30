@@ -6,10 +6,11 @@ RSpec.describe 'Storefront::Sessions', type: :request do
   let(:user) { Spree::User.create!(email: 'viewer@example.com', password:, password_confirmation: password) }
   let(:gym) { Gym.create!(name: 'City Gym', slug: 'city-gym') }
   let(:class_type) { ClassType.create!(gym: gym, name: 'Pilates', default_capacity: 6) }
+  let(:trainer) { Trainer.create!(gym: gym, user: Spree::User.create!(email: 't@example.com', password: password)) }
   let(:session_record) do
     Session.create!(
       class_type: class_type,
-      trainer: Trainer.create!(gym: gym, user: Spree::User.create!(email: 't@example.com', password: password)),
+      trainer: trainer,
       starts_at: 2.days.from_now.change(hour: 9, min: 30),
       capacity: 6
     )
