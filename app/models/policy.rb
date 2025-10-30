@@ -1,4 +1,3 @@
-# app/models/policy.rb
 class Policy < ApplicationRecord
   belongs_to :gym
 

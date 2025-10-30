@@ -1,4 +1,3 @@
-# db/migrate/20251030120000_add_duration_minutes_to_sessions.rb
 class AddDurationMinutesToSessions < ActiveRecord::Migration[7.1]
   def change
     add_column :sessions, :duration_minutes, :integer, default: 60, null: false
