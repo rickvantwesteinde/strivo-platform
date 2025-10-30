@@ -1,3 +1,4 @@
+# app/services/reports/session_utilization.rb
 module Reports
   class SessionUtilization
     def initialize(session)
@@ -7,9 +8,9 @@ module Reports
     def call
       {
         session_id: session.id,
-        bookings_count: session.bookings.confirmed.count,
+        bookings_count: session.bookings.status_confirmed.count,
         capacity: session.capacity,
-        no_shows_count: session.bookings.where(no_show: true).count
+        no_shows_count: session.bookings.status_confirmed.where(no_show: true).count
       }
     end
 
