@@ -45,7 +45,11 @@ class BookingManager
 
   attr_reader :session, :user
 
-  delegate :gym, to: :session
+  def session_class_type
+  session.class_type
+  end
+
+  delegate :gym, to: :session_class_type
 
   def session_full?
     confirmed_bookings_count >= session.capacity
