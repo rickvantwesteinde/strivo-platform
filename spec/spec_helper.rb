@@ -33,4 +33,4 @@ Dir[File.join(File.dirname(__FILE__), 'support/**/*.rb')].sort.each { |f| requir
 # Fix RSpec crash in GitHub Actions
 at_exit do
   $!.nil? ? exit(0) : exit(1)
-end
+end 
