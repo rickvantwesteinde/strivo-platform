@@ -45,11 +45,12 @@ RSpec.describe 'Storefront::Bookings', type: :request do
 
   describe 'DELETE /bookings/:id' do
     before { sign_in user }
+    before { class_type.update!(default_cancellation_cutoff_hours: 6) }
 
     it 'refunds a credit when canceling before the cutoff' do
       booking = BookingManager.new(session: session_record, user:).book!
 
-      travel_to(session_record.starts_at - 5.hours) do
+      travel_to(session_record.starts_at - 7.hours) do
         expect do
           delete storefront_booking_path(booking)
         end.to change { CreditLedger.where(reason: :booking_refund).count }.by(1)
