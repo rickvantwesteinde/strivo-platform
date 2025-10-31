@@ -8,7 +8,7 @@
 # light-weight as possible. Requiring heavyweight dependencies from this file
 # will add to the boot time of your test suite on EVERY test run, even for an
 # individual file that may not need all of that loaded. Instead, consider making
-# a separate helper file that requires the additional dependencies and performs
+# a separate helper file that requires additional dependencies and performs
 # the additional setup, and require it from the spec files that actually need
 # it.
 #
@@ -30,6 +30,7 @@ require 'spree_stripe/factories'
 # in spec/support/ and its subdirectories.
 Dir[File.join(File.dirname(__FILE__), 'support/**/*.rb')].sort.each { |f| require f }
 
+# Fix RSpec crash in GitHub Actions
 at_exit do
   $!.nil? ? exit(0) : exit(1)
 end
