@@ -32,6 +32,8 @@ Rails.application.routes.draw do
   end
 
   namespace :storefront, path: '', module: :storefront do
+    root 'dashboard#index'
+
     resources :classes, only: [:index]
     resources :sessions, only: [:show]
     resources :bookings, only: [:create, :destroy]
@@ -62,5 +64,5 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   # Defines the root path route ("/")
-  root "spree/home#index"
+  root "storefront/dashboard#index"
 end
