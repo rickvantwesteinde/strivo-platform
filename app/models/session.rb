@@ -1,14 +1,22 @@
+# frozen_string_literal: true
+
 class Session < ApplicationRecord
   belongs_to :class_type
-  belongs_to :gym
+  belongs_to :trainer
 
   has_many :bookings, dependent: :destroy
+  has_many :waitlist_entries, dependent: :destroy
 
-  validates :starts_at, presence: true
+  delegate :gym, to: :class_type
+
+  validates :starts_at, :duration_minutes, presence: true
   validates :capacity, numericality: { greater_than: 0 }
-  validate :gym_matches_class_type
 
-  scope :upcoming, ->(until_time: 2.weeks.from_now) { where(starts_at: Time.current..until_time).order(:starts_at) }
+  before_validation :apply_default_capacity
+
+  scope :upcoming, ->(until_time: 2.weeks.from_now) do
+    where(starts_at: Time.current..until_time).order(:starts_at)
+  end
 
   def ends_at
     starts_at + duration_minutes.minutes
@@ -31,7 +39,7 @@ class Session < ApplicationRecord
   end
 
   def cutoff_time
-    starts_at - cancellation_cutoff_hours.hours
+    starts_at - (gym.policy&.cancel_cutoff_hours || 6).hours
   end
 
   def cutoff_passed?
@@ -42,11 +50,13 @@ class Session < ApplicationRecord
     Time.current >= starts_at
   end
 
+  def spots_remaining
+    spots_left
+  end
+
   private
 
-  def gym_matches_class_type
-    return if class_type.nil? || gym_id == class_type.gym_id
-
-    errors.add(:gym_id, 'must match class type gym')
+  def apply_default_capacity
+    self.capacity ||= class_type&.default_capacity
   end
 end
