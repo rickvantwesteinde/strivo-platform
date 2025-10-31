@@ -16,7 +16,7 @@ module Storefront
     private
 
     # Eenduidige accessor voor de ingelogde user
-    def current_spree_user
+    def current_user
       return super if defined?(super)
       return spree_current_user if respond_to?(:spree_current_user, true)
       nil
