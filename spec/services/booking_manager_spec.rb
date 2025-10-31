@@ -1,7 +1,7 @@
 require 'rails_helper'
-include_context "with gym context"
 
 RSpec.describe BookingManager do
+  include_context "with gym context"
   let(:gym) { create(:gym) }
   let(:plan) { create(:subscription_plan, gym:, per_week: 2, unlimited: false) }
   let(:user) { create(:spree_user) }

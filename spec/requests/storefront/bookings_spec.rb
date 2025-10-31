@@ -1,8 +1,8 @@
 # spec/requests/storefront/bookings_spec.rb
 require 'rails_helper'
-include_context "with gym context"
 
 RSpec.describe 'Storefront::Bookings', type: :request do
+  include_context "with gym context"
   include ActiveSupport::Testing::TimeHelpers
 
   let(:password) { 'Password1!' }

@@ -1,8 +1,8 @@
 # spec/requests/storefront/sessions_spec.rb
 require 'rails_helper'
-include_context "with gym context"
 
 RSpec.describe 'Storefront::Sessions', type: :request do
+  include_context "with gym context"
   let(:password) { 'Password1!' }
   let(:user) { Spree::User.create!(email: 'viewer@example.com', password:, password_confirmation: password) }
   let(:gym) { Gym.create!(name: 'City Gym', slug: 'city-gym') }
