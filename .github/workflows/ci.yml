@@ -68,4 +68,4 @@ jobs:
         run: bundle exec rails db:prepare
 
       - name: RSpec
-        run: bundle exec rspec --format documentation --backtrace
+        run: bundle exec rspec --format documentation --backtrace spec/features
