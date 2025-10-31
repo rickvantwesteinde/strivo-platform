@@ -5,6 +5,6 @@ class ClassType < ApplicationRecord
   validates :name, presence: true
 
   def upcoming_sessions(limit: 5, until_time: 2.weeks.from_now)
-    sessions.upcoming(until_time:).limit(limit)
+    Session.where(class_type: self, starts_at: Time.current..until_time).order(:starts_at).limit(limit)
   end
 end
