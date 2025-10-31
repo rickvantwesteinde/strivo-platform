@@ -1,5 +1,6 @@
 # spec/requests/storefront/bookings_spec.rb
 require 'rails_helper'
+include_context "with gym context"
 
 RSpec.describe 'Storefront::Bookings', type: :request do
   include ActiveSupport::Testing::TimeHelpers

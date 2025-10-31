@@ -1,4 +1,5 @@
 require 'rails_helper'
+include_context "with gym context"
 
 RSpec.describe "API V1 Bookings", type: :request do
   let(:gym) { create(:gym) }
