@@ -19,7 +19,7 @@
           <tr>
             <td><%= l(booking.session.starts_at, format: :long) %></td>
             <td><%= booking.session.class_type.name %></td>
-            <td><%= booking.session.trainer_name.presence || '-' %></td>
+            <td><%= booking.session.trainer&.user&.email || '-' %></td>
             <td><%= booking.status.humanize %></td>
           </tr>
         <% end %>
@@ -47,7 +47,7 @@
           <tr>
             <td><%= l(booking.session.starts_at, format: :long) %></td>
             <td><%= booking.session.class_type.name %></td>
-            <td><%= booking.session.trainer_name.presence || '-' %></td>
+            <td><%= booking.session.trainer&.user&.email || '-' %></td>
             <td><%= booking.status.humanize %></td>
           </tr>
         <% end %>

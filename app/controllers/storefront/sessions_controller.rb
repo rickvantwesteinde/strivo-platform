@@ -5,10 +5,18 @@ module Storefront
     def show
       @session = Session.find(params[:id])
 
-      # Data die de view/spec verwacht
-      @occupancy = @session.bookings.where(status: :confirmed).count
-      @spots_left = @session.spots_left
-      @booking   = @session.bookings.find_by(user: current_spree_user, status: :confirmed)
+      confirmed_bookings = Booking.where(session: @session, status: Booking.statuses[:confirmed])
+      @occupancy = confirmed_bookings.count
+      @spots_left = [@session.capacity - @occupancy, 0].max
+      @booking   = confirmed_booking_for_current_user
+    end
+
+    private
+
+    def confirmed_booking_for_current_user
+      return unless current_spree_user
+
+      Booking.find_by(session: @session, user: current_spree_user, status: Booking.statuses[:confirmed])
     end
   end
 end

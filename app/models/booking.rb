@@ -1,14 +1,8 @@
 class Booking < ApplicationRecord
-  belongs_to :user, class_name: 'Spree::User'
+  belongs_to :gym
+  belongs_to :user, foreign_key: :user_id, class_name: 'Spree::User'
   belongs_to :session
+  belongs_to :subscription_plan, optional: true
 
-  has_one :gym, through: :session
-  has_many :credit_ledgers, dependent: :nullify
-
-  enum :status, { confirmed: 0, canceled: 1 }, prefix: true
-
-  validates :user_id, uniqueness: { scope: :session_id }
-
-  scope :upcoming, -> { joins(:session).where('sessions.starts_at >= ?', Time.current).order('sessions.starts_at ASC') }
-  scope :past, -> { joins(:session).where('sessions.starts_at < ?', Time.current).order('sessions.starts_at DESC') }
+  enum :status, { confirmed: 0, canceled: 1 }, default: :confirmed
 end

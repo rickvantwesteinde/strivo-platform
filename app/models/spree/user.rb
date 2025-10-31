@@ -11,4 +11,7 @@ class Spree::User < Spree.base_class
 
   has_many :bookings, dependent: :destroy, foreign_key: :user_id
   has_many :credit_ledgers, dependent: :destroy, foreign_key: :user_id
+  has_many :subscriptions, dependent: :destroy, foreign_key: :user_id
+  has_many :waitlist_entries, dependent: :destroy, foreign_key: :user_id
+  has_many :trainers, dependent: :destroy, foreign_key: :user_id
 end

@@ -2,16 +2,17 @@ require 'rails_helper'
 
 RSpec.describe 'Storefront::Sessions', type: :request do
   let(:password) { 'Password1!' }
-  let(:user) { Spree::User.create!(email: 'viewer@example.com', password:, password_confirmation: password) }
-  let(:gym) { Gym.create!(name: 'City Gym', slug: 'city-gym') }
-  let(:class_type) { ClassType.create!(gym:, name: 'Pilates') }
+  let(:user) { create(:spree_user, email: 'viewer@example.com', password:, password_confirmation: password) }
+  let(:gym) { create(:gym, name: 'City Gym', slug: 'city-gym') }
+  let(:class_type) { create(:class_type, gym:, name: 'Pilates') }
+  let(:trainer) { create(:trainer, gym:) }
   let(:session_record) do
-    Session.create!(
-      gym:,
+    create(
+      :session,
       class_type:,
+      trainer:,
       starts_at: 2.days.from_now.change(hour: 9, min: 30),
-      capacity: 6,
-      trainer_name: 'Coach Kim'
+      capacity: 6
     )
   end
 
