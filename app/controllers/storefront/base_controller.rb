@@ -6,7 +6,7 @@ module Storefront
     include Spree::Core::ControllerHelpers::Auth
     helper Storefront::CreditsHelper
 
-    before_action :authenticate_spree_user!
+    before_action :require_spree_login
     before_action :set_current_gym
 
     helper_method :current_gym, :current_spree_user
