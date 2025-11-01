@@ -1,10 +1,15 @@
 # frozen_string_literal: true
 
-class Storefront::DashboardController < Storefront::BaseController
-  def index
-    @sessions_today = current_gym.sessions
-                                 .where("DATE(start_at) = ?", Date.current)
-                                 .includes(:class_type, :trainer, :bookings)
-                                 .order(:starts_at)
+module Storefront
+  class DashboardController < Storefront::BaseController
+    def show
+      @credits = CreditLedger.where(user: spree_current_user, gym: current_gym).sum(:amount)
+
+      @sessions = Session
+                    .where("start_at >= ?", Time.current) # <-- start_at
+                    .order(:start_at)
+                    .limit(10)
+                    .includes(:class_type, trainer: :user)
+    end
   end
 end
