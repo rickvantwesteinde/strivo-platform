@@ -1,18 +1,18 @@
+# frozen_string_literal: true
+
 class CreditLedger < ApplicationRecord
   belongs_to :gym
-  belongs_to :user, foreign_key: :user_id, class_name: 'Spree::User'
+  belongs_to :user, class_name: "Spree::User"
   belongs_to :booking, optional: true
 
   enum :reason, {
-    monthly_grant: 0,
-    booking_charge: 1,
-    booking_refund: 2,
-    rollover_expiry: 3
+    manual_grant: 0,
+    monthly_grant: 1,
+    booking_charge: 2,
+    booking_refund: 3
   }
 
-  scope :for_user_and_gym, ->(user:, gym:) { where(user: user, gym: gym) }
+  validates :amount, presence: true, numericality: { only_integer: true }
 
-  def self.balance_for(user:, gym:)
-    for_user_and_gym(user: user, gym: gym).sum(:amount)
-  end
+  scope :for_user_and_gym, ->(user:, gym:) { where(user:, gym:) }
 end
