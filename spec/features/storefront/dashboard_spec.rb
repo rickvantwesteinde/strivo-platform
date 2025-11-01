@@ -15,7 +15,7 @@ RSpec.feature "Storefront Dashboard", type: :feature do
   scenario "User views dashboard with sessions and credits" do
     # Zet de sessie expliciet in de toekomst (voorkomt filtering)
     create(:session, class_type: class_type, trainer: trainer,
-                     starts_at: 2.hours.from_now, capacity: 14)
+                     start_at: 2.hours.from_now, capacity: 14)
     CreditLedger.create!(user: user, gym: gym, amount: 5, reason: :monthly_grant)
 
     # Bezoek direct het dashboard i.p.v. root (Spree home)
