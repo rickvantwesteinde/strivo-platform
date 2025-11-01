@@ -8,7 +8,7 @@ create_table :sessions, if_not_exists: true do |t|
   t.timestamps
 end
 
-# Alleen indexen toevoegen als de kolommen bestaan (safe/herhaalbaar)
+# Indexen alleen toevoegen als kolommen bestaan (safe/herhaalbaar)
 if column_exists?(:sessions, :class_type_id) && column_exists?(:sessions, :starts_at)
   add_index :sessions,
             %i[class_type_id starts_at],
