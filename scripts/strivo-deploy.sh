@@ -3,7 +3,7 @@ set -e
 
 APP_DIR="/var/www/strivo"
 BRANCH="main"
-REPO_SSH="git@github.com:rickvantwesteinde/strivo-platform.git"
+REPO_URL="https://github.com/rickvantwesteinde/strivo-platform.git"
 
 echo "[STRIVO-DEPLOY] 🚀 $(date)"
 
@@ -13,13 +13,12 @@ if [ -d "$HOME/.rbenv" ]; then
   eval "$($HOME/.rbenv/bin/rbenv init - bash)"
 fi
 
-# Eerste keer: clone via deploy key
+# Eerste keer: clone from public repo
 if [ ! -d "$APP_DIR/.git" ]; then
   echo "[STRIVO-DEPLOY] Initializing repo..."
   mkdir -p "$APP_DIR"
-  # clone as current user, using the per-user deploy key
-  GIT_SSH_COMMAND="ssh -i $HOME/.ssh/github_deploy -o IdentitiesOnly=yes" \
-    git clone "$REPO_SSH" "$APP_DIR"
+  # clone from public repository (no authentication needed)
+  git clone "$REPO_URL" "$APP_DIR"
 fi
 
 # Markeer repo als safe (tegen 'dubious ownership')
@@ -31,8 +30,7 @@ cd "$APP_DIR"
 set -a
 [ -f "$APP_DIR/.env" ] && . "$APP_DIR/.env"
 set +a
-GIT_SSH_COMMAND="ssh -i $HOME/.ssh/github_deploy -o IdentitiesOnly=yes" \
-  git fetch origin "$BRANCH"
+git fetch origin "$BRANCH"
 git reset --hard "origin/$BRANCH"
 
 echo "[STRIVO-DEPLOY] Bundler install..."
