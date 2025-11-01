@@ -1,11 +1,9 @@
-# spec/spec_helper.rb
 # frozen_string_literal: true
 
-require 'simplecov'
-SimpleCov.start 'rails' do
+require "simplecov"
+SimpleCov.start do
   enable_coverage :branch
-  add_filter %r{^/config/}
-  add_filter %r{^/spec/}
+  add_filter "/spec/"
 end
 
 RSpec.configure do |config|
@@ -13,9 +11,12 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  # Snellere runs: alleen focus gemarkeerde specs
   config.filter_run_when_matching :focus
-  config.example_status_persistence_file_path = 'spec/examples.txt'
-  config.disable_monkey_patching!
+
+  # Volledige backtraces alleen wanneer nodig
+  config.default_formatter = "doc" if config.files_to_run.one?
+
   config.order = :random
   Kernel.srand config.seed
 end
