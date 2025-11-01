@@ -4,20 +4,17 @@ require "rails_helper"
 RSpec.feature "Storefront Dashboard", type: :feature do
   let!(:gym) { create(:default_gym) }
   let(:user) { create(:spree_user) }
-
   let(:class_type)   { create(:class_type, gym: gym, name: "HIIT") }
   let(:trainer_user) { create(:spree_user, name: "Jan") }
   let(:trainer)      { create(:trainer, gym: gym, user: trainer_user) }
 
   before do
-    # Spree/Warden login
     login_as(user, scope: :spree_user)
   end
 
   scenario "User views dashboard with sessions and credits" do
     create(:session, class_type: class_type, trainer: trainer,
                      starts_at: Time.current, capacity: 14)
-
     CreditLedger.create!(user: user, gym: gym, amount: 5, reason: :monthly_grant)
 
     visit root_path

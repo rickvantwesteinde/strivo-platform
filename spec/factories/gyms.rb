@@ -1,5 +1,5 @@
-# frozen_string_literal: true
-
+# frozen_string_literal: true 
+# spec/factories/gyms.rb
 FactoryBot.define do
   factory :gym do
     sequence(:name) { |n| "Gym #{n}" }
