@@ -24,7 +24,7 @@ jobs:
           POSTGRES_DB: strivo_test
         ports: ['5432:5432']
         options: >-
-          --health-cmd="pg_isready -U postgres -d strivo_test"
+          --health-cmd="pg_isready -h 127.0.0.1 -U postgres -d strivo_test"
           --health-interval=10s --health-timeout=5s --health-retries=5
 
       redis:
@@ -37,8 +37,9 @@ jobs:
     env:
       RAILS_ENV: test
       SECRET_KEY_BASE: dummy_key_for_ci
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/strivo_test
-      REDIS_URL: redis://localhost:6379/1
+      DISABLE_SPRING: 1
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/strivo_test
+      REDIS_URL: redis://127.0.0.1:6379/1
       BUNDLE_WITHOUT: production
 
     steps:
@@ -69,9 +70,9 @@ jobs:
 
       - name: Wait for Postgres to be ready
         run: |
-          echo "Waiting for Postgres on localhost:5432 (db=strivo_test, user=postgres)"
+          echo "Waiting for Postgres on 127.0.0.1:5432 (db=strivo_test, user=postgres)"
           for i in $(seq 1 60); do
-            if pg_isready -h localhost -p 5432 -U postgres -d strivo_test >/dev/null 2>&1; then
+            if pg_isready -h 127.0.0.1 -p 5432 -U postgres -d strivo_test >/dev/null 2>&1; then
               echo "Postgres is ready (after ${i}s)"
               exit 0
             fi
@@ -81,7 +82,7 @@ jobs:
           echo "Postgres not ready after 60s"
           exit 1
 
-      # Altijd clean slate: voorkomt oude tabellen zonder gym_id
+      # Altijd clean slate: voorkomt oude tabellen/indexes
       - name: Reset DB (clean slate)
         run: bundle exec rails db:drop db:create db:migrate --trace
 
@@ -91,4 +92,3 @@ jobs:
 
       - name: RSpec
         run: bundle exec rspec --format documentation --backtrace
-```0
