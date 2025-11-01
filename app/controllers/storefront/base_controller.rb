@@ -10,24 +10,25 @@ module Storefront
     before_action :set_current_gym
 
     helper Storefront::CreditsHelper
-    helper_method :current_gym, :current_spree_user
+    helper_method :current_gym, :default_gym, :spree_current_user
 
     private
 
-    # Spree standaard login guard
     def require_spree_login
-      unless spree_current_user
-        redirect_to spree_login_path
-      end
+      redirect_to spree_login_path unless spree_current_user
     end
 
-    # Single-gym setup: pak altijd de enige gym
+    # Single-gym setup (later kun je dit vervangen door user->gyms)
     def set_current_gym
-      @current_gym = Gym.first
+      @current_gym = default_gym
     end
 
     def current_gym
-      @current_gym
+      @current_gym || default_gym
+    end
+
+    def default_gym
+      @default_gym ||= Gym.first
     end
   end
 end
