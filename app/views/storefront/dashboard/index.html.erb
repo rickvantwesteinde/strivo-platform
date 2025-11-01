@@ -12,7 +12,10 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-gray-600">Credits</p>
-            <p class="text-3xl font-bold text-blue-600 mt-1"><%= remaining_credits(current_spree_user, current_gym) %></p>
+            <!-- Toon helper, val terug op @credits als die gezet is -->
+            <p class="text-3xl font-bold text-blue-600 mt-1">
+              <%= (defined?(remaining_credits) && remaining_credits(current_spree_user, current_gym)) || (@credits || 0) %>
+            </p>
           </div>
           <div class="bg-blue-100 p-3 rounded-full">
             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,19 +60,19 @@
         <h2 class="text-xl font-semibold text-gray-900">Sessies Vandaag</h2>
       </div>
       <div class="divide-y divide-gray-200">
-        <% if @sessions_today.any? %>
+        <% if @sessions_today.present? && @sessions_today.any? %>
           <% @sessions_today.each do |session| %>
             <div class="p-6 hover:bg-gray-50 transition-colors">
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex-1">
                   <div class="flex items-center gap-3">
-                    <h3 class="text-lg font-medium text-gray-900"><%= session.class_type.name %></h3>
+                    <h3 class="text-lg font-medium text-gray-900"><%= session.class_type&.name %></h3>
                     <span class="text-sm text-gray-500">
-                      <%= l session.starts_at, format: :short %>
+                      <%= l(session.start_at, format: :short) %> <!-- start_at i.p.v. starts_at -->
                     </span>
                   </div>
                   <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-1 text-sm text-gray-600">
-                    <span>Trainer: <%= session.trainer.user.name %></span>
+                    <span>Trainer: <%= session.trainer&.user&.name %></span>
                     <span class="hidden sm:inline">•</span>
                     <span class="font-medium text-gray-900">
                       <%= session.bookings.confirmed.count %> / <%= session.capacity %> plekken
