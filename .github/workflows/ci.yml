@@ -63,17 +63,16 @@ jobs:
           bundle config unset without || true
           bundle config set without 'production'
           bundle _2.5.18_ install --jobs 4 --retry 3
-          bundle _2.5.18_ list | grep rspec || true
 
       - name: Fix bin permissions
         run: chmod +x bin/* || true
 
-      - name: Wait for Postgres to be ready
+      - name: Wait for Postgres
         run: |
           echo "Waiting for Postgres on 127.0.0.1:5432 (db=strivo_test, user=postgres)"
           for i in $(seq 1 60); do
             if pg_isready -h 127.0.0.1 -p 5432 -U postgres -d strivo_test >/dev/null 2>&1; then
-              echo "Postgres is ready (after ${i}s)"
+              echo "Postgres ready (after ${i}s)"
               exit 0
             fi
             echo "Waiting... (${i}/60)"
@@ -82,11 +81,15 @@ jobs:
           echo "Postgres not ready after 60s"
           exit 1
 
-      # Altijd clean slate: voorkomt oude tabellen/indexes
       - name: Reset DB (clean slate)
-        run: bundle exec rails db:drop db:create db:migrate --trace
+        env:
+          RAILS_ENV: test
+        run: |
+          bundle exec rails db:environment:set RAILS_ENV=test
+          bundle exec rails db:drop DISABLE_DATABASE_ENVIRONMENT_CHECK=1 || true
+          bundle exec rails db:create
+          bundle exec rails db:migrate --trace
 
-      # Debug: toon kolommen van sessions vóór tests
       - name: Echo sessions schema (debug)
         run: bundle exec rails runner -e test "puts ActiveRecord::Base.connection.columns(:sessions).map(&:name).sort.inspect"
 
