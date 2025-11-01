@@ -41,15 +41,14 @@ trainer = Trainer.find_or_create_by!(gym: gym, user: trainer_user)
 end
 
 # == Sessions ==
+# Let op: geen :gym-parameter meer; Session krijgt gym via class_type.gym
 ClassType.where(gym: gym).find_each do |class_type|
   (1..4).each do |offset|
     start_time = offset.days.from_now.change(hour: 9 + offset, min: 0)
 
-    # Belangrijk: gym meegeven (verplicht & FK-consistent met class_type.gym)
     Session.find_or_create_by!(
       class_type: class_type,
       trainer:    trainer,
-      gym:        gym,
       starts_at:  start_time
     ) do |s|
       s.capacity                  = class_type.default_capacity || 14
