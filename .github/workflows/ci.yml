@@ -1,0 +1,2 @@
+- name: RSpec
+  run: bundle exec rspec --format documentation --backtrace --fail-fast
