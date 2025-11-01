@@ -19,7 +19,7 @@ RSpec.feature "Storefront Dashboard", type: :feature do
     CreditLedger.create!(user: user, gym: gym, amount: 5, reason: :monthly_grant)
 
     # Bezoek direct het dashboard i.p.v. root (Spree home)
-    visit storefront_dashboard_path
+    visit "/storefront/dashboard"
 
     # Functionele checks (taal- en layout-onafhankelijk)
     expect(page).to have_content("Credits")
