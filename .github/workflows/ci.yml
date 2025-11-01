@@ -24,7 +24,7 @@ jobs:
           POSTGRES_DB: strivo_test
         ports: ['5432:5432']
         options: >-
-          --health-cmd="pg_isready -h 127.0.0.1 -U postgres -d strivo_test"
+          --health-cmd="pg_isready -U postgres -d strivo_test"
           --health-interval=10s --health-timeout=5s --health-retries=5
 
       redis:
@@ -37,9 +37,8 @@ jobs:
     env:
       RAILS_ENV: test
       SECRET_KEY_BASE: dummy_key_for_ci
-      DISABLE_SPRING: 1
-      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/strivo_test
-      REDIS_URL: redis://127.0.0.1:6379/1
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/strivo_test
+      REDIS_URL: redis://localhost:6379/1
       BUNDLE_WITHOUT: production
 
     steps:
@@ -67,28 +66,18 @@ jobs:
       - name: Fix bin permissions
         run: chmod +x bin/* || true
 
-      - name: Wait for Postgres
+      - name: Wait for Postgres to be ready
         run: |
-          echo "Waiting for Postgres on 127.0.0.1:5432 (db=strivo_test, user=postgres)"
+          echo "Waiting for Postgres on localhost:5432 (db=strivo_test, user=postgres)"
           for i in $(seq 1 60); do
-            if pg_isready -h 127.0.0.1 -p 5432 -U postgres -d strivo_test >/dev/null 2>&1; then
-              echo "Postgres ready (after ${i}s)"
-              exit 0
-            fi
-            echo "Waiting... (${i}/60)"
-            sleep 1
-          done
-          echo "Postgres not ready after 60s"
-          exit 1
+            if pg_isready -h localhost -p 5432 -U postgres -d strivo_test >/dev/null 2>&1; then
+              echo "Postgres is ready (after ${i}s)"; exit 0; fi
+            echo "Waiting... (${i}/60)"; sleep 1; done
+          echo "Postgres not ready after 60s"; exit 1
 
+      # Clean slate voorkomt schema-drift
       - name: Reset DB (clean slate)
-        env:
-          RAILS_ENV: test
-        run: |
-          bundle exec rails db:environment:set RAILS_ENV=test
-          bundle exec rails db:drop DISABLE_DATABASE_ENVIRONMENT_CHECK=1 || true
-          bundle exec rails db:create
-          bundle exec rails db:migrate --trace
+        run: bundle exec rails db:drop db:create db:migrate --trace
 
       - name: Echo sessions schema (debug)
         run: bundle exec rails runner -e test "puts ActiveRecord::Base.connection.columns(:sessions).map(&:name).sort.inspect"
