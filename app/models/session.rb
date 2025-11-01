@@ -1,9 +1,9 @@
-# app/models/session.rb
 class Session < ApplicationRecord
-  belongs_to :gym
   belongs_to :class_type
   belongs_to :trainer
 
-  # (optioneel) validaties
+  # Haal gym via de class_type (geen gym_id kolom op sessions)
+  delegate :gym, to: :class_type
+
   validates :starts_at, presence: true
 end
