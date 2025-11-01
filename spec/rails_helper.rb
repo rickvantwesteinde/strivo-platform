@@ -9,7 +9,7 @@ abort('The Rails environment is running in production mode!') if Rails.env.produ
 
 require 'rspec/rails'
 
-# Maintain test schema
+# Houd de testdatabase synchroon met migraties
 begin
   ActiveRecord::Migration.maintain_test_schema!
 rescue ActiveRecord::PendingMigrationError => e
@@ -17,24 +17,20 @@ rescue ActiveRecord::PendingMigrationError => e
   exit 1
 end
 
-# Load everything in spec/support/**/*.rb
+# Laad alle support helpers (incl. shoulda, capybara, factory_bot, etc.)
 Dir[Rails.root.join('spec/support/**/*.rb')].sort.each { |f| require f }
 
 RSpec.configure do |config|
   config.fixture_path = "#{::Rails.root}/spec/fixtures"
 
-  # If you use ActiveJob
-  # config.include ActiveJob::TestHelper
-
-  # If you use FactoryBot:
+  # FactoryBot short-hands
   config.include FactoryBot::Syntax::Methods
 
-  # Use transactions by default
+  # Transacties per test (snel & schoon)
   config.use_transactional_fixtures = true
 
-  # infer spec type from location (model/controller/feature etc.)
+  # Spec type afleiden uit pad (model/controller/feature/system)
   config.infer_spec_type_from_file_location!
 
-  # filter Rails lines in backtraces
   config.filter_rails_from_backtrace!
 end
