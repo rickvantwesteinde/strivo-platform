@@ -1,6 +1,9 @@
+# frozen_string_literal: true
+
 FactoryBot.define do
   factory :trainer do
-    gym
-    user { create(:spree_user) }
+    association :gym
+    association :user, factory: :spree_user
+    bio { "Coach" }
   end
 end
