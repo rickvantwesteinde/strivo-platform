@@ -32,7 +32,7 @@ class CreateCoreDomain < ActiveRecord::Migration[8.0]
       t.index %i[gym_id name], unique: true
     end
 
-    # == Trainers ==
+    # == Trainers (user scoped to gym) ==
     create_table :trainers, if_not_exists: true do |t|
       t.references :gym,  null: false, foreign_key: true
       t.references :user, null: false, foreign_key: { to_table: :spree_users }
@@ -69,6 +69,7 @@ class CreateCoreDomain < ActiveRecord::Migration[8.0]
     # == Sessions ==
     create_table :sessions, if_not_exists: true do |t|
       t.references :class_type, null: false, foreign_key: true
+      # IMPORTANT: sessions belong to a gym as well
       t.references :gym,        null: false, foreign_key: true
       t.references :trainer,    null: false, foreign_key: true
       t.datetime :starts_at, null: false
@@ -78,8 +79,18 @@ class CreateCoreDomain < ActiveRecord::Migration[8.0]
       t.timestamps
     end
 
-    add_index :sessions, %i[gym_id starts_at],        name: "index_sessions_on_gym_id_and_starts_at"        unless index_exists?(:sessions, %i[gym_id starts_at])
-    add_index :sessions, %i[class_type_id starts_at], name: "index_sessions_on_class_type_id_and_starts_at" unless index_exists?(:sessions, %i[class_type_id starts_at])
+    # If the table existed historically without gym_id, patch it now (idempotent).
+    unless column_exists?(:sessions, :gym_id)
+      add_reference :sessions, :gym, null: false, foreign_key: true
+    end
+
+    # Safe, guarded indexes (never inline in create_table)
+    if column_exists?(:sessions, :gym_id) && column_exists?(:sessions, :starts_at)
+      add_index :sessions, %i[gym_id starts_at], name: "index_sessions_on_gym_id_and_starts_at" unless index_exists?(:sessions, %i[gym_id starts_at], name: "index_sessions_on_gym_id_and_starts_at")
+    end
+    if column_exists?(:sessions, :class_type_id) && column_exists?(:sessions, :starts_at)
+      add_index :sessions, %i[class_type_id starts_at], name: "index_sessions_on_class_type_id_and_starts_at" unless index_exists?(:sessions, %i[class_type_id starts_at], name: "index_sessions_on_class_type_id_and_starts_at")
+    end
 
     # == Bookings ==
     create_table :bookings, if_not_exists: true do |t|
@@ -87,7 +98,7 @@ class CreateCoreDomain < ActiveRecord::Migration[8.0]
       t.references :user,    null: false, foreign_key: { to_table: :spree_users }
       t.references :session, null: false, foreign_key: true
       t.references :subscription_plan, foreign_key: true
-      t.integer  :status,       null: false, default: 0
+      t.integer  :status,       null: false, default: 0   # enum { confirmed:0, canceled:1 }
       t.integer  :used_credits, null: false, default: 0
       t.datetime :canceled_at
       t.boolean  :no_show, null: false, default: false
@@ -98,8 +109,8 @@ class CreateCoreDomain < ActiveRecord::Migration[8.0]
 
     # == Credit Ledgers ==
     create_table :credit_ledgers, if_not_exists: true do |t|
-      t.references :gym,     null: false, foreign_key: true
-      t.references :user,    null: false, foreign_key: { to_table: :spree_users }
+      t.references :gym,  null: false, foreign_key: true
+      t.references :user, null: false, foreign_key: { to_table: :spree_users }
       t.references :booking, foreign_key: true
       t.integer :reason, null: false, default: 0
       t.integer :amount, null: false
@@ -109,11 +120,12 @@ class CreateCoreDomain < ActiveRecord::Migration[8.0]
       t.index :metadata, using: :gin
     end
 
-    # == Waitlist ==
+    # == Waitlist Entries ==
     create_table :waitlist_entries, if_not_exists: true do |t|
       t.references :session, null: false, foreign_key: true
       t.references :user,    null: false, foreign_key: { to_table: :spree_users }
       t.timestamps
+      t.index %i[session_id created_at]
       t.index %i[session_id user_id], unique: true
     end
   end
