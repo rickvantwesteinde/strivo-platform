@@ -7,7 +7,7 @@ require 'selenium-webdriver'
 Capybara.default_max_wait_time = 5
 Capybara.server = :puma, { Silent: true }
 
-# Headless Chrome
+# Headless Chrome voor JS tests (system/feature met js: true)
 Capybara.register_driver :headless_chrome do |app|
   opts = Selenium::WebDriver::Chrome::Options.new
   opts.add_argument('--headless=new')
