@@ -13,7 +13,7 @@ if [ -d "$HOME/.rbenv" ]; then
   eval "$($HOME/.rbenv/bin/rbenv init - bash)"
 fi
 
-# Eerste keer: clone from public repo
+# First time: clone from public repo
 if [ ! -d "$APP_DIR/.git" ]; then
   echo "[STRIVO-DEPLOY] Initializing repo..."
   mkdir -p "$APP_DIR"
@@ -21,7 +21,7 @@ if [ ! -d "$APP_DIR/.git" ]; then
   git clone "$REPO_URL" "$APP_DIR"
 fi
 
-# Markeer repo als safe (tegen 'dubious ownership')
+# Mark repo as safe (against 'dubious ownership')
 git config --global --add safe.directory "$APP_DIR" || true
 
 echo "[STRIVO-DEPLOY] Pulling latest code from $BRANCH..."
