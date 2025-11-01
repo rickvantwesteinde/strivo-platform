@@ -21,8 +21,9 @@ module Storefront
       end
     end
 
+    # Single-gym setup: pak altijd de enige gym
     def set_current_gym
-      @current_gym = spree_current_user&.gyms&.first || Gym.first
+      @current_gym = Gym.first
     end
 
     def current_gym
