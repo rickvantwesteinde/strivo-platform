@@ -10,6 +10,10 @@ create_table :sessions, if_not_exists: true do |t|
   t.timestamps
 end
 
-# indexes na de create_table, met guards
-add_index :sessions, %i[gym_id starts_at]        unless index_exists?(:sessions, %i[gym_id starts_at])
-add_index :sessions, %i[class_type_id starts_at] unless index_exists?(:sessions, %i[class_type_id starts_at])
+# Add indexes **after** table creation, guarded:
+if column_exists?(:sessions, :gym_id) && column_exists?(:sessions, :starts_at)
+  add_index :sessions, %i[gym_id starts_at] unless index_exists?(:sessions, %i[gym_id starts_at])
+end
+if column_exists?(:sessions, :class_type_id) && column_exists?(:sessions, :starts_at)
+  add_index :sessions, %i[class_type_id starts_at] unless index_exists?(:sessions, %i[class_type_id starts_at])
+end
