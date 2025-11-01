@@ -7,6 +7,10 @@ on:
   push:
     branches: [ main, feature/**, fix/** ]
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   rspec:
     runs-on: ubuntu-latest
@@ -35,7 +39,7 @@ jobs:
       SECRET_KEY_BASE: dummy_key_for_ci
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/strivo_test
       REDIS_URL: redis://localhost:6379/1
-      BUNDLE_WITHOUT: production   # we willen NIET dev/test uitsluiten
+      BUNDLE_WITHOUT: production
 
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +56,6 @@ jobs:
                                   libpq-dev postgresql-client \
                                   libvips
 
-      # <<< BELANGRIJK: reset bundler 'without' en installeer gems incl. dev/test
       - name: Install gems (dev+test included)
         run: |
           gem install bundler -v 2.5.18
@@ -61,11 +64,31 @@ jobs:
           bundle _2.5.18_ install --jobs 4 --retry 3
           bundle _2.5.18_ list | grep rspec || true
 
-      - name: Fix bin permissions (CI)
+      - name: Fix bin permissions
         run: chmod +x bin/* || true
 
-      - name: Prepare DB
-        run: bundle exec rails db:prepare
+      - name: Wait for Postgres to be ready
+        run: |
+          echo "Waiting for Postgres on localhost:5432 (db=strivo_test, user=postgres)"
+          for i in $(seq 1 60); do
+            if pg_isready -h localhost -p 5432 -U postgres -d strivo_test >/dev/null 2>&1; then
+              echo "Postgres is ready (after ${i}s)"
+              exit 0
+            fi
+            echo "Waiting... (${i}/60)"
+            sleep 1
+          done
+          echo "Postgres not ready after 60s"
+          exit 1
+
+      # Altijd clean slate: voorkomt oude tabellen zonder gym_id
+      - name: Reset DB (clean slate)
+        run: bundle exec rails db:drop db:create db:migrate --trace
+
+      # Debug: toon kolommen van sessions vóór tests
+      - name: Echo sessions schema (debug)
+        run: bundle exec rails runner -e test "puts ActiveRecord::Base.connection.columns(:sessions).map(&:name).sort.inspect"
 
       - name: RSpec
-        run: bundle exec rspec --format documentation --backtrace spec/features
+        run: bundle exec rspec --format documentation --backtrace
+```0
