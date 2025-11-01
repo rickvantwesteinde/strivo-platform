@@ -22,17 +22,17 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: strivo_test
-        ports: ['5432:5432']
+        ports: ["5432:5432"]
         options: >-
           --health-cmd="pg_isready -U postgres -d strivo_test"
-          --health-interval=10s --health-timeout=5s --health-retries=5
+          --health-interval=10s --health-timeout=5s --health-retries=10
 
       redis:
         image: redis:7
-        ports: ['6379:6379']
+        ports: ["6379:6379"]
         options: >-
           --health-cmd="redis-cli ping"
-          --health-interval=10s --health-timeout=5s --health-retries=5
+          --health-interval=10s --health-timeout=5s --health-retries=10
 
     env:
       RAILS_ENV: test
@@ -46,7 +46,7 @@ jobs:
 
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.3.5'
+          ruby-version: "3.3.5"
           bundler-cache: false
 
       - name: Install system packages
@@ -54,9 +54,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential pkg-config \
                                   libpq-dev postgresql-client \
-                                  libvips chromium-browser
+                                  libvips
 
-      - name: Install gems (dev+test included)
+      - name: Install gems (incl. test)
         run: |
           gem install bundler -v 2.5.18
           bundle config unset without || true
@@ -66,26 +66,19 @@ jobs:
       - name: Fix bin permissions
         run: chmod +x bin/* || true
 
-      - name: Wait for Postgres to be ready
+      - name: Wait for Postgres
         run: |
-          echo "Waiting for Postgres on localhost:5432 (db=strivo_test, user=postgres)"
           for i in $(seq 1 60); do
             if pg_isready -h localhost -p 5432 -U postgres -d strivo_test >/dev/null 2>&1; then
-              echo "Postgres is ready (after ${i}s)"
-              exit 0
+              echo "Postgres ready"; exit 0
             fi
-            echo "Waiting... (${i}/60)"
-            sleep 1
+            echo "Waiting for Postgres... ($i/60)"; sleep 1
           done
-          echo "Postgres not ready after 60s"
           exit 1
 
-      # Clean slate to avoid any legacy table shapes
-      - name: Reset DB (clean slate)
+      # Clean slate zodat oude schema’s je niet slopen
+      - name: Reset DB
         run: bundle exec rails db:drop db:create db:migrate --trace
 
-      - name: Echo sessions schema (debug)
-        run: bundle exec rails runner -e test "puts ActiveRecord::Base.connection.columns(:sessions).map(&:name).sort.inspect"
-
-      - name: RSpec
+      - name: Run RSpec
         run: bundle exec rspec --format documentation --backtrace
