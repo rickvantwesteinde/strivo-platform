@@ -1,20 +1,15 @@
-
-# frozen_string_literal: true
-
-# Legacy migration — superseded by 20251001000001_create_core_domain.
-# Do NOT create the sessions table here on fresh installs.
-# Only add safe indexes if the table already exists from older installs.
-
-class CreateSessions < ActiveRecord::Migration[8.0]
-  def change
-    unless table_exists?(:sessions)
-      say "Skipping legacy CreateSessions; sessions will be created by CreateCoreDomain", true
-      return
-    end
-
-    add_index :sessions, %i[gym_id starts_at]        if column_exists?(:sessions, :gym_id) &&
-                                                        !index_exists?(:sessions, %i[gym_id starts_at])
-    add_index :sessions, %i[class_type_id starts_at] if column_exists?(:sessions, :class_type_id) &&
-                                                        !index_exists?(:sessions, %i[class_type_id starts_at])
-  end
+# == Sessions ==
+create_table :sessions, if_not_exists: true do |t|
+  t.references :class_type, null: false, foreign_key: true
+  t.references :gym,        null: false, foreign_key: true
+  t.references :trainer,    null: false, foreign_key: true
+  t.datetime :starts_at, null: false
+  t.integer  :duration_minutes, null: false, default: 60
+  t.integer  :capacity,         null: false, default: 14
+  t.integer  :cancellation_cutoff_hours, null: false, default: 6
+  t.timestamps
 end
+
+# indexes na de create_table, met guards
+add_index :sessions, %i[gym_id starts_at]        unless index_exists?(:sessions, %i[gym_id starts_at])
+add_index :sessions, %i[class_type_id starts_at] unless index_exists?(:sessions, %i[class_type_id starts_at])
