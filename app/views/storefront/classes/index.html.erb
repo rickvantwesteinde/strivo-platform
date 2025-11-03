@@ -1,4 +1,12 @@
-<h1>Lessen</h1>
+<h1>Lessen - <%= current_gym.name %></h1>
+
+<% if @active_membership&.unlimited? %>
+  <p>Je onbeperkte plan laat maximaal <%= @active_membership.daily_soft_cap %> boekingen per dag toe.</p>
+<% elsif @active_membership&.credit? %>
+  <p>Beschikbare credits: <strong><%= CreditLedger.remaining_for(user: current_spree_user, gym: current_gym) %></strong></p>
+<% else %>
+  <p>Geen actief lidmaatschap voor deze locatie.</p>
+<% end %>
 
 <% @class_types.each do |class_type| %>
   <section class="class-type">
@@ -17,7 +25,7 @@
               &mdash; <span>Trainer: <%= session.trainer_name %></span>
             <% end %>
             <span>(<%= session.spots_left %> plekken vrij)</span>
-            <%= link_to 'Details', storefront_session_path(session) %>
+            <%= link_to 'Details', storefront_session_path(session, gym_slug: current_gym.slug) %>
           </li>
         <% end %>
       </ul>

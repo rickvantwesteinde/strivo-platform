@@ -1,6 +1,6 @@
 module Strivo
   module Admin
-    class ApplicationController < ActionController::Base
+    class ApplicationController < Spree::Admin::BaseController
     end
   end
 end
