@@ -9,6 +9,7 @@
 #   end
 
 Spree::Core::Engine.load_seed if defined?(Spree::Core)
+<<<<<<< HEAD
 
 password = 'Password1!'
 demo_user = Spree::User.find_or_create_by!(email: 'user1@example.com') do |user|
@@ -49,3 +50,5 @@ end
 unless CreditLedger.for_user_and_gym(user: demo_user, gym:).exists?
   CreditLedger.create!(user: demo_user, gym:, amount: 10, reason: :monthly_grant)
 end
+=======
+>>>>>>> parent of 7c2f58f0 (feat(storefront): booking MVP (sessions list, book/cancel, my bookings) (#16))

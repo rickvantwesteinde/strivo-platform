@@ -11,25 +11,6 @@
   </head>
 
   <body>
-    <header>
-      <nav>
-        <%= link_to 'Home', root_path %>
-        <% if current_spree_user %>
-          <%= link_to 'Lessen', storefront_classes_path %>
-          <%= link_to 'Mijn boekingen', storefront_account_bookings_path %>
-          <%= link_to 'Uitloggen', spree_logout_path, method: :delete %>
-        <% else %>
-          <%= link_to 'Inloggen', spree_login_path %>
-        <% end %>
-      </nav>
-    </header>
-
-    <% flash.each do |key, value| %>
-      <div class="flash <%= key %>"><%= value %></div>
-    <% end %>
-
-    <main>
-      <%= yield %>
-    </main>
+    <%= yield %>
   </body>
 </html>
