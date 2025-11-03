@@ -5,6 +5,16 @@ RSpec.describe 'Storefront::Sessions', type: :request do
   let(:user) { Spree::User.create!(email: 'viewer@example.com', password:, password_confirmation: password) }
   let(:gym) { Gym.create!(name: 'City Gym', slug: 'city-gym') }
   let(:class_type) { ClassType.create!(gym:, name: 'Pilates') }
+  let!(:membership) do
+    Membership.create!(
+      user:,
+      gym:,
+      plan_type: :credit,
+      credits_per_week: 3,
+      rollover_limit: 9,
+      starts_on: Date.current.beginning_of_month
+    )
+  end
   let(:session_record) do
     Session.create!(
       gym:,
@@ -22,7 +32,7 @@ RSpec.describe 'Storefront::Sessions', type: :request do
 
   describe 'GET /sessions/:id' do
     it 'shows the booking button when not yet booked' do
-      get storefront_session_path(session_record)
+      get storefront_session_path(session_record, gym_slug: gym.slug)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include('Boek')
@@ -32,7 +42,7 @@ RSpec.describe 'Storefront::Sessions', type: :request do
     it 'shows the cancel button when already booked' do
       BookingManager.new(session: session_record, user:).book!
 
-      get storefront_session_path(session_record)
+      get storefront_session_path(session_record, gym_slug: gym.slug)
 
       expect(response.body).to include('Annuleer')
     end
