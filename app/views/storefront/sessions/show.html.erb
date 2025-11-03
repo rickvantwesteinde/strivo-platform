@@ -11,11 +11,13 @@
 
 <% if @booking.present? %>
   <p>Je bent ingeschreven voor deze sessie.</p>
-  <%= button_to 'Annuleer', storefront_booking_path(@booking), method: :delete, data: { confirm: 'Weet je het zeker?' } %>
+  <%= button_to 'Annuleer', storefront_booking_path(@booking, gym_slug: current_gym.slug), method: :delete, data: { confirm: 'Weet je het zeker?' } %>
 <% elsif @session.full? %>
   <p>Deze sessie is vol.</p>
+<% elsif @active_membership&.unlimited? && @daily_cap_reached %>
+  <p>Je hebt je dagelijkse limiet bereikt voor onbeperkte boekingen.</p>
 <% else %>
-  <%= button_to 'Boek', storefront_bookings_path(session_id: @session.id), method: :post %>
+  <%= button_to 'Boek', storefront_bookings_path(session_id: @session.id, gym_slug: current_gym.slug), method: :post %>
 <% end %>
 
-<p><%= link_to 'Terug naar lessen', storefront_classes_path %></p>
+<p><%= link_to 'Terug naar lessen', storefront_classes_path(gym_slug: current_gym.slug) %></p>

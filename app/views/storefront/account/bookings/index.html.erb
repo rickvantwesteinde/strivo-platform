@@ -1,10 +1,16 @@
 <h1>Mijn boekingen</h1>
 
-<p>Beschikbare credits: <strong><%= @remaining_credits %></strong></p>
+<% if @active_membership&.credit? %>
+  <p>Beschikbare credits: <strong><%= @remaining_credits %></strong></p>
+<% elsif @active_membership&.unlimited? %>
+  <p>Plan: <strong>Onbeperkt</strong> (max. <%= @active_membership.daily_soft_cap %> boekingen per dag)</p>
+<% else %>
+  <p>Geen actief lidmaatschap voor <%= current_gym.name %>.</p>
+<% end %>
 
 <section>
   <h2>Komende boekingen</h2>
-  <% if @upcoming_bookings.any? %>
+  <% if @upcoming_bookings&.any? %>
     <table>
       <thead>
         <tr>
@@ -32,7 +38,7 @@
 
 <section>
   <h2>Voorbije boekingen</h2>
-  <% if @past_bookings.any? %>
+  <% if @past_bookings&.any? %>
     <table>
       <thead>
         <tr>

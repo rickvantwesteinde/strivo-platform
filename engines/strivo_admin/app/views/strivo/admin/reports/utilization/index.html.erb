@@ -1,0 +1,54 @@
+<h1>Bezettingsrapport</h1>
+
+<% if @selected_gym.present? %>
+  <p>Locatie: <strong><%= @selected_gym.name %></strong></p>
+<% end %>
+
+<%= form_with url: Strivo::Admin::Engine.routes.url_helpers.reports_utilization_path, method: :get, local: true do |form| %>
+  <div class="filters">
+    <div>
+      <%= form.label :gym_id, 'Gym' %>
+      <%= form.select :gym_id, @gyms.map { |gym| [gym.name, gym.id] }, { selected: @selected_gym&.id }, {} %>
+    </div>
+    <div>
+      <%= form.label :start_on, 'Startdatum' %>
+      <%= form.date_field :start_on, value: @start_on %>
+    </div>
+    <div>
+      <%= form.label :end_on, 'Einddatum' %>
+      <%= form.date_field :end_on, value: @end_on %>
+    </div>
+    <div>
+      <%= form.submit 'Toon rapport' %>
+    </div>
+  </div>
+<% end %>
+
+<% if @selected_gym.nil? %>
+  <p>Geen gym geselecteerd.</p>
+<% elsif @report_rows.blank? %>
+  <p>Geen sessies gevonden in de gekozen periode.</p>
+<% else %>
+  <table>
+    <thead>
+      <tr>
+        <th>Datum</th>
+        <th>Les</th>
+        <th>Capaciteit</th>
+        <th>Bevestigde boekingen</th>
+        <th>Bezetting</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @report_rows.each do |row| %>
+        <tr>
+          <td><%= l(row.starts_at, format: :long) %></td>
+          <td><%= row.class_type_name %></td>
+          <td><%= row.capacity %></td>
+          <td><%= row.confirmed_bookings %></td>
+          <td><%= number_to_percentage(row.fill_rate * 100, precision: 1) %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
