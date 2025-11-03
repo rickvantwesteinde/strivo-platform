@@ -18,6 +18,16 @@ require 'spec_helper'
 #
 Dir[Rails.root.join('spec/support/**/*.rb')].each { |f| require f }
 
+Rails.application.routes.default_url_options[:host] = 'www.example.com'
+
+RSpec.configure do |config|
+  config.before(:suite) do
+    I18n.default_locale = :nl
+    I18n.locale = :nl
+    Money.default_currency = Money::Currency.find(:eur)
+  end
+end
+
 # Checks for pending migrations before tests are run.
 # If you are not using ActiveRecord, you can remove this line.
 ActiveRecord::Migration.maintain_test_schema!
