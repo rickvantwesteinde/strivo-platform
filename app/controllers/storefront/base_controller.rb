@@ -12,7 +12,7 @@ module Storefront
     before_action :load_storefront_context
 
     helper Storefront::CreditsHelper
-    helper_method :default_gym, :current_gym, :current_membership, :available_memberships
+    helper_method :default_gym, :current_gym, :current_membership, :available_memberships, :spree_current_user
 
     private
 
