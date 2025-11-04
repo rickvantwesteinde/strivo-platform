@@ -14,7 +14,7 @@
     <header>
       <nav>
         <%= link_to 'Home', root_path %>
-        <% if current_spree_user %>
+        <% if spree_current_user %>
           <%= link_to 'Lessen', storefront_classes_path %>
           <%= link_to 'Mijn boekingen', storefront_account_bookings_path %>
           <%= link_to 'Uitloggen', spree_logout_path, method: :delete %>

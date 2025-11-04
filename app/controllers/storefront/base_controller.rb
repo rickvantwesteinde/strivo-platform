@@ -12,24 +12,15 @@ module Storefront
     before_action :load_storefront_context
 
     helper Storefront::CreditsHelper
-    helper_method :default_gym, :current_spree_user, :current_gym, :current_membership, :available_memberships
+    helper_method :default_gym, :current_gym, :current_membership, :available_memberships
 
     private
 
-    # Eenduidige accessor voor de ingelogde user
-    def current_spree_user
-      return super if defined?(super)
-      return spree_current_user if respond_to?(:spree_current_user, true)
-      nil
-    end
+    # Gebruik de spree_current_user helper uit Spree::AuthenticationHelpers
 
     # Simpele guard die exact naar spree_login_path redirect
     def require_spree_login
-      signed_in =
-        (respond_to?(:spree_user_signed_in?, true) && spree_user_signed_in?) ||
-        current_spree_user.present?
-
-      return if signed_in
+      return if spree_current_user.present?
 
       redirect_to spree_login_path
     end
@@ -47,9 +38,9 @@ module Storefront
     end
 
     def available_memberships
-      return [] if current_spree_user.nil?
+      return [] if spree_current_user.nil?
 
-      @available_memberships ||= current_spree_user.memberships.includes(:gym).select { |membership| membership.active_on?(Date.current) }
+      @available_memberships ||= spree_current_user.memberships.includes(:gym).select { |membership| membership.active_on?(Date.current) }
     end
 
     def load_storefront_context
@@ -58,9 +49,9 @@ module Storefront
     end
 
     def resolve_current_gym
-      return default_gym if current_spree_user.nil?
+      return default_gym if spree_current_user.nil?
 
-      memberships = current_spree_user.memberships.includes(:gym)
+      memberships = spree_current_user.memberships.includes(:gym)
       return default_gym if memberships.empty?
 
       active_memberships = memberships.select { |membership| membership.active_on?(Date.current) }
@@ -74,10 +65,10 @@ module Storefront
     end
 
     def resolve_current_membership
-      return nil if current_spree_user.nil? || current_gym.nil?
+      return nil if spree_current_user.nil? || current_gym.nil?
 
-      current_spree_user.memberships
-                        .for_user_and_gym(current_spree_user, current_gym)
+      spree_current_user.memberships
+                        .for_user_and_gym(spree_current_user, current_gym)
                         .active_on(Date.current)
                         .order(starts_on: :desc)
                         .first
