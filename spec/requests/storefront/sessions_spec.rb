@@ -27,7 +27,7 @@ RSpec.describe 'Storefront::Sessions', type: :request do
 
   before do
     CreditLedger.create!(user:, gym:, amount: 3, reason: :monthly_grant)
-    sign_in user, scope: :spree_user
+    sign_in_spree(user)
   end
 
   describe 'GET /sessions/:id' do

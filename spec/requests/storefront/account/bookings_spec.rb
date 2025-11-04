@@ -49,7 +49,7 @@ RSpec.describe 'Storefront::Account::Bookings', type: :request do
     CreditLedger.create!(user:, gym:, amount: 5, reason: :monthly_grant)
     Booking.create!(user:, session: session_one, status: :confirmed)
     Booking.create!(user:, session: session_two, status: :confirmed)
-    sign_in user, scope: :spree_user
+    sign_in_spree(user)
   end
 
   it 'shows credit balance for the selected gym' do

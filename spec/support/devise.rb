@@ -1,17 +1,19 @@
-if defined?(Warden)
-  include Warden::Test::Helpers
-  Warden.test_mode!
-end
-
 if defined?(Devise)
   RSpec.configure do |config|
     config.include Devise::Test::ControllerHelpers, type: :controller
     config.include Devise::Test::IntegrationHelpers, type: :feature
     config.include Devise::Test::IntegrationHelpers, type: :request
 
-    config.include Warden::Test::Helpers
-    config.before :suite do
-      Warden.test_mode!
+    if defined?(Warden)
+      config.include Warden::Test::Helpers, type: :feature
+      config.include Warden::Test::Helpers, type: :request
+      config.include Warden::Test::Helpers, type: :controller
+      config.before :suite do
+        Warden.test_mode!
+      end
+      config.after :each do
+        Warden.test_reset!
+      end
     end
   end
 end

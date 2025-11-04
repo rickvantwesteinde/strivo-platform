@@ -8,9 +8,9 @@ module Storefront
       # Data die de view/spec verwacht
       @occupancy = @session.bookings.where(status: :confirmed).count
       @spots_left = @session.spots_left
-      @booking   = @session.bookings.find_by(user: current_spree_user, status: :confirmed)
+      @booking   = @session.bookings.find_by(user: spree_current_user, status: :confirmed)
       @active_membership = current_membership
-      @booking_manager = BookingManager.new(session: @session, user: current_spree_user, membership: @active_membership)
+      @booking_manager = BookingManager.new(session: @session, user: spree_current_user, membership: @active_membership)
       @daily_cap_reached = @booking_manager.daily_cap_reached?
     end
   end

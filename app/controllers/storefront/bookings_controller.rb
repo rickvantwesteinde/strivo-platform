@@ -6,12 +6,12 @@ module Storefront
       session_record = Session.find(params[:session_id])
 
       unless session_record.gym == current_gym
-        redirect_to storefront_session_path(session_record, gym_slug: current_gym&.slug || session_record.gym.slug),
+        redirect_to storefront_session_path(session_record, gym_slug: session_record.gym.slug),
                     alert: I18n.t('storefront.bookings.no_membership', default: 'Geen actief lidmaatschap voor deze locatie.')
         return
       end
 
-      manager = BookingManager.new(session: session_record, user: current_spree_user, membership: current_membership)
+      manager = BookingManager.new(session: session_record, user: spree_current_user, membership: current_membership)
       manager.book!
 
       redirect_to storefront_session_path(session_record, gym_slug: current_gym.slug),
@@ -22,9 +22,9 @@ module Storefront
 
     def destroy
       # Haal alleen boekingen op die van de huidige user zijn
-      booking  = current_spree_user.bookings.find(params[:id])
+      booking  = spree_current_user.bookings.find(params[:id])
       ensure_same_gym!(booking)
-      manager  = BookingManager.new(session: booking.session, user: current_spree_user, membership: current_membership)
+      manager  = BookingManager.new(session: booking.session, user: spree_current_user, membership: current_membership)
       manager.cancel!(booking: booking) # expliciet keyword, maar ondersteunt nu ook positioneel
 
       redirect_to storefront_session_path(booking.session, gym_slug: current_gym.slug),

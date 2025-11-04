@@ -17,8 +17,8 @@
 ENV['RAILS_ENV'] ||= 'test'
 require File.expand_path('../config/environment', __dir__)
 
-require 'rspec/rails'                  # ← laad rspec-rails
-ActiveRecord::Migration.maintain_test_schema!  # ← houd test DB-schema bij
+require 'rspec/rails'
+ActiveRecord::Migration.maintain_test_schema!
 
 require 'dotenv/load'
 require 'sidekiq/testing'
@@ -29,6 +29,17 @@ require 'spree_stripe/factories'
 # Requires supporting ruby files with custom matchers and macros, etc,
 # in spec/support/ and its subdirectories.
 Dir[File.join(File.dirname(__FILE__), 'support/**/*.rb')].sort.each { |f| require f }
+
+RSpec.configure do |config|
+  # Ensure transactional fixtures are enabled for proper test isolation
+  config.use_transactional_fixtures = true
+  
+  # Infer spec type from file location
+  config.infer_spec_type_from_file_location!
+  
+  # Filter lines from Rails gems in backtraces
+  config.filter_rails_from_backtrace!
+end
 
 at_exit do
   $!.nil? ? exit(0) : exit(1)
