@@ -39,7 +39,7 @@ RSpec.describe 'Storefront::Bookings', type: :request do
     end
 
     it 'creates a booking and consumes a credit' do
-      sign_in user, scope: :spree_user
+      sign_in user, scope: :user
 
       expect do
         post storefront_bookings_path, params: { session_id: session_record.id, gym_slug: gym.slug }
@@ -62,7 +62,7 @@ RSpec.describe 'Storefront::Bookings', type: :request do
         trainer_name: 'Trainer Tess'
       )
 
-      sign_in user, scope: :spree_user
+      sign_in user, scope: :user
 
       expect do
         post storefront_bookings_path, params: { session_id: other_session.id, gym_slug: gym.slug }
@@ -74,7 +74,7 @@ RSpec.describe 'Storefront::Bookings', type: :request do
   end
 
   describe 'DELETE /bookings/:id' do
-    before { sign_in user, scope: :spree_user }
+    before { sign_in user, scope: :user }
 
     it 'refunds a credit when canceling before the cutoff' do
       booking = BookingManager.new(session: session_record, user:).book!
@@ -130,7 +130,7 @@ RSpec.describe 'Storefront::Bookings', type: :request do
     end
 
     it 'allows bookings up to the daily cap without consuming credits' do
-      sign_in user, scope: :spree_user
+      sign_in user, scope: :user
 
       expect do
         post storefront_bookings_path, params: { session_id: session_record.id, gym_slug: gym.slug }
@@ -142,7 +142,7 @@ RSpec.describe 'Storefront::Bookings', type: :request do
     end
 
     it 'blocks bookings beyond the daily cap' do
-      sign_in user, scope: :spree_user
+      sign_in user, scope: :user
 
       post storefront_bookings_path, params: { session_id: session_record.id, gym_slug: gym.slug }
       post storefront_bookings_path, params: { session_id: other_session.id, gym_slug: gym.slug }
