@@ -3,7 +3,7 @@
 <% if @active_membership&.unlimited? %>
   <p>Je onbeperkte plan laat maximaal <%= @active_membership.daily_soft_cap %> boekingen per dag toe.</p>
 <% elsif @active_membership&.credit? %>
-  <p>Beschikbare credits: <strong><%= CreditLedger.remaining_for(user: current_spree_user, gym: current_gym) %></strong></p>
+  <p>Beschikbare credits: <strong><%= CreditLedger.remaining_for(user: spree_current_user, gym: current_gym) %></strong></p>
 <% else %>
   <p>Geen actief lidmaatschap voor deze locatie.</p>
 <% end %>
