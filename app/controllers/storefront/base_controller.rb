@@ -5,6 +5,7 @@ module Storefront
     # Zorg dat Devise/Spree helpers beschikbaar zijn
     include Devise::Controllers::Helpers
     include Spree::Core::ControllerHelpers::Auth
+    include Spree::AuthenticationHelpers
     include Storefront::CreditsHelper
 
     # Enige guard die we willen: redirect ALTIJD naar spree_login_path
@@ -12,11 +13,9 @@ module Storefront
     before_action :load_storefront_context
 
     helper Storefront::CreditsHelper
-    helper_method :default_gym, :current_gym, :current_membership, :available_memberships, :spree_current_user
+    helper_method :default_gym, :current_gym, :current_membership, :available_memberships
 
     private
-
-    # Gebruik de spree_current_user helper uit Spree::AuthenticationHelpers
 
     # Simpele guard die exact naar spree_login_path redirect
     def require_spree_login
