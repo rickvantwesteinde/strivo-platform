@@ -6,7 +6,7 @@ module Storefront
       session_record = Session.find(params[:session_id])
 
       unless session_record.gym == current_gym
-        redirect_to storefront_session_path(session_record, gym_slug: session_record.gym.slug),
+        redirect_to storefront_session_path(session_record, gym_slug: current_gym&.slug || session_record.gym.slug),
                     alert: I18n.t('storefront.bookings.no_membership', default: 'Geen actief lidmaatschap voor deze locatie.')
         return
       end
