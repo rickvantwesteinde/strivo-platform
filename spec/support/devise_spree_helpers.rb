@@ -6,4 +6,5 @@ end
 
 RSpec.configure do |config|
   config.include DeviseSpreeHelpers, type: :request
+  config.include DeviseSpreeHelpers, type: :feature
 end
