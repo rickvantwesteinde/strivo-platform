@@ -30,6 +30,18 @@ require 'spree_stripe/factories'
 # in spec/support/ and its subdirectories.
 Dir[File.join(File.dirname(__FILE__), 'support/**/*.rb')].sort.each { |f| require f }
 
+# Configure RSpec
+RSpec.configure do |config|
+  # Ensure transactional fixtures are enabled for proper test isolation
+  config.use_transactional_fixtures = true
+  
+  # Infer spec type from file location
+  config.infer_spec_type_from_file_location!
+  
+  # Filter lines from Rails gems in backtraces
+  config.filter_rails_from_backtrace!
+end
+
 at_exit do
   $!.nil? ? exit(0) : exit(1)
 end
