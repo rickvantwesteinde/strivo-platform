@@ -30,7 +30,7 @@ RSpec.describe 'Strivo Admin Utilization Report', type: :request do
   end
 
   it 'renders the report for authenticated admins' do
-    sign_in admin, scope: :spree_admin_user
+    sign_in_spree_admin(admin)
 
     get path, params: { gym_id: gym.id, start_on: Date.current.to_s, end_on: Date.current.to_s }
 
