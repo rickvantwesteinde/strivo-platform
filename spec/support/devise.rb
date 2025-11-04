@@ -10,7 +10,10 @@ if defined?(Devise)
       config.before :suite do
         Warden.test_mode!
       end
-      config.after :each do
+      config.after :each, type: :feature do
+        Warden.test_reset!
+      end
+      config.after :each, type: :controller do
         Warden.test_reset!
       end
     end
