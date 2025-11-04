@@ -6,7 +6,6 @@ if defined?(Devise)
 
     if defined?(Warden)
       config.include Warden::Test::Helpers, type: :feature
-      config.include Warden::Test::Helpers, type: :request
       config.include Warden::Test::Helpers, type: :controller
       config.before :suite do
         Warden.test_mode!
