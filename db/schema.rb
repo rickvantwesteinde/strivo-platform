@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_02_154146) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_05_183341) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -71,6 +71,47 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_02_154146) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "bookings", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "session_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "canceled_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["session_id"], name: "index_bookings_on_session_id"
+    t.index ["user_id", "session_id"], name: "index_bookings_on_user_id_and_session_id", unique: true
+    t.index ["user_id"], name: "index_bookings_on_user_id"
+  end
+
+  create_table "class_types", force: :cascade do |t|
+    t.bigint "gym_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.integer "default_duration_minutes", default: 60, null: false
+    t.integer "default_capacity", default: 12, null: false
+    t.integer "default_cancellation_cutoff_hours", default: 2, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gym_id", "name"], name: "index_class_types_on_gym_id_and_name", unique: true
+    t.index ["gym_id"], name: "index_class_types_on_gym_id"
+  end
+
+  create_table "credit_ledgers", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "gym_id", null: false
+    t.bigint "booking_id"
+    t.integer "amount", null: false
+    t.integer "reason", default: 0, null: false
+    t.jsonb "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["booking_id"], name: "index_credit_ledgers_on_booking_id"
+    t.index ["gym_id"], name: "index_credit_ledgers_on_gym_id"
+    t.index ["user_id", "gym_id"], name: "index_credit_ledgers_on_user_id_and_gym_id"
+    t.index ["user_id"], name: "index_credit_ledgers_on_user_id"
+    t.check_constraint "amount <> 0", name: "credit_ledgers_amount_nonzero"
+  end
+
   create_table "friendly_id_slugs", force: :cascade do |t|
     t.string "slug", null: false
     t.bigint "sluggable_id", null: false
@@ -85,6 +126,47 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_02_154146) do
     t.index ["slug", "sluggable_type", "scope", "locale"], name: "index_friendly_id_slugs_unique", unique: true
     t.index ["sluggable_id"], name: "index_friendly_id_slugs_on_sluggable_id"
     t.index ["sluggable_type"], name: "index_friendly_id_slugs_on_sluggable_type"
+  end
+
+  create_table "gyms", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.string "address"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_gyms_on_slug", unique: true
+  end
+
+  create_table "memberships", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "gym_id", null: false
+    t.integer "plan_type", default: 0, null: false
+    t.decimal "credits_per_week", precision: 8, scale: 2
+    t.integer "rollover_limit"
+    t.date "starts_on", null: false
+    t.date "ends_on"
+    t.integer "daily_soft_cap"
+    t.jsonb "metadata", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gym_id"], name: "index_memberships_on_gym_id"
+    t.index ["user_id", "gym_id", "starts_on"], name: "index_memberships_on_user_id_and_gym_id_and_starts_on"
+    t.index ["user_id"], name: "index_memberships_on_user_id"
+  end
+
+  create_table "sessions", force: :cascade do |t|
+    t.bigint "class_type_id", null: false
+    t.bigint "gym_id", null: false
+    t.datetime "starts_at", null: false
+    t.integer "duration_minutes", default: 60, null: false
+    t.integer "capacity", default: 12, null: false
+    t.integer "cancellation_cutoff_hours", default: 2, null: false
+    t.string "trainer_name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["class_type_id", "starts_at"], name: "index_sessions_on_class_type_id_and_starts_at"
+    t.index ["class_type_id"], name: "index_sessions_on_class_type_id"
+    t.index ["gym_id"], name: "index_sessions_on_gym_id"
   end
 
   create_table "spree_addresses", force: :cascade do |t|
@@ -1947,6 +2029,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_02_154146) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "bookings", "sessions"
+  add_foreign_key "bookings", "spree_users", column: "user_id"
+  add_foreign_key "class_types", "gyms"
+  add_foreign_key "credit_ledgers", "bookings"
+  add_foreign_key "credit_ledgers", "gyms"
+  add_foreign_key "credit_ledgers", "spree_users", column: "user_id"
+  add_foreign_key "memberships", "gyms"
+  add_foreign_key "memberships", "spree_users", column: "user_id"
+  add_foreign_key "sessions", "class_types"
+  add_foreign_key "sessions", "gyms"
   add_foreign_key "spree_oauth_access_grants", "spree_oauth_applications", column: "application_id"
   add_foreign_key "spree_oauth_access_tokens", "spree_oauth_applications", column: "application_id"
   add_foreign_key "spree_option_type_translations", "spree_option_types"
