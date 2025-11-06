@@ -1,9 +1,19 @@
+# app/helpers/navigation_helper.rb
 module NavigationHelper
   def credits_balance_badge
-    return unless defined?(spree_current_user) && spree_current_user && defined?(current_gym) && current_gym
+    # moet ingelogd zijn
+    return unless respond_to?(:spree_current_user, true) && spree_current_user
 
-    balance = CreditLedger.balance_for(user: spree_current_user, gym: current_gym)
-    link_to storefront_credits_path, class: "inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition" do
+    # kies gym (fallback naar eerste gym als current_gym ontbreekt)
+    gym = (respond_to?(:current_gym, true) && current_gym) || Gym.first
+    return unless gym
+
+    balance = CreditLedger.balance_for(user: spree_current_user, gym: gym)
+
+    # gebruik Spree engine route voor store credits
+    h = Spree::Core::Engine.routes.url_helpers
+    link_to h.account_store_credits_path,
+            class: "inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium bg-gray-900 text-white hover:bg-gray-800 transition" do
       raw %(
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -12,5 +22,8 @@ module NavigationHelper
         <span>Credits: #{balance}</span>
       )
     end
+  rescue => e
+    Rails.logger.warn("credits_balance_badge failed: #{e.class}: #{e.message}")
+    nil
   end
 end
