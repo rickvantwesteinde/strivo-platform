@@ -24,3 +24,7 @@ config/credentials/*.key
 vendor/bundle/
 pkg/
 engines/*/pkg/
+
+# Build artifacts
+/app/assets/builds/*
+!/app/assets/builds/.keep

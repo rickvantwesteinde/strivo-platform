@@ -11,7 +11,6 @@ pidfile "/var/www/strivo/tmp/pids/puma.pid"
 state_path "/var/www/strivo/tmp/pids/puma.state"
 
 # Belangrijk: TCP bind voor Nginx proxy
-bind "tcp://127.0.0.1:3000"
 
 stdout_redirect "/var/www/strivo/log/puma.stdout.log", "/var/www/strivo/log/puma.stderr.log", true
 
@@ -20,3 +19,5 @@ on_worker_boot do
   ActiveRecord::Base.connection_pool.disconnect! rescue nil
   ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
 end
+# --- systemd-safe defaults ---
+bind "tcp://127.0.0.1:3000"
