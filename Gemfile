@@ -116,3 +116,6 @@ gem "spree_paypal_checkout", "~> 0.5"
 gem "strivo_admin", path: "engines/strivo_admin"
 
 
+
+# Silence Ruby 3.5 stdlib deprecation used by Spree
+gem "ostruct"

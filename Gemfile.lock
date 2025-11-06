@@ -989,6 +989,7 @@ DEPENDENCIES
   jbuilder
   letter_opener
   mini_racer
+  ostruct
   pg (~> 1.6)
   pry
   pry-remote
@@ -1020,8 +1021,8 @@ DEPENDENCIES
   spree_sample (~> 5.1)
   spree_storefront (~> 5.1)
   spree_stripe
-  strivo_admin!
   stimulus-rails
+  strivo_admin!
   turbo-rails
   tzinfo-data
   web-console
