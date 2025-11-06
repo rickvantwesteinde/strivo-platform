@@ -1,0 +1,14 @@
+<%# Zichtbaar op mobile; fixed onderin %>
+<div class="md:hidden fixed inset-x-0 bottom-0 z-40">
+  <div class="mx-3 mb-3 rounded-2xl bg-white shadow-lg border border-gray-200 p-3 flex items-center justify-between">
+    <div class="text-sm text-gray-600">
+      <span class="font-medium">Jouw saldo</span>
+    </div>
+    <div>
+      <%= credits_balance_badge %>
+    </div>
+  </div>
+</div>
+
+<%# ruimte onderaan zodat content niet achter de bar valt %>
+<div class="md:hidden h-20"></div>
