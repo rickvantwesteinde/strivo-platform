@@ -1,0 +1,33 @@
+<div class="container mx-auto max-w-3xl py-8">
+  <h1 class="text-2xl font-semibold mb-4">Mijn Credits</h1>
+
+  <div class="mb-6 p-4 rounded border bg-white">
+    <div class="text-sm text-gray-500">Huidig saldo</div>
+    <div class="text-3xl font-bold"><%= number_with_precision(@balance, precision: 0) %></div>
+  </div>
+
+  <div class="rounded border bg-white">
+    <table class="min-w-full">
+      <thead>
+        <tr>
+          <th class="text-left p-3 border-b">Datum</th>
+          <th class="text-left p-3 border-b">Reden</th>
+          <th class="text-right p-3 border-b">Mutatie</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @entries.each do |e| %>
+          <% row = Credits::Presenters::EntryPresenter.new(e, self) %>
+          <tr>
+            <td class="p-3 border-b"><%= row.date %></td>
+            <td class="p-3 border-b"><%= row.reason %></td>
+            <td class="p-3 border-b text-right"><%= row.amount %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @entries.blank? %>
+      <div class="p-4 text-sm text-gray-500">Nog geen mutaties.</div>
+    <% end %>
+  </div>
+</div>

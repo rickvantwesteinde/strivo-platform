@@ -115,3 +115,4 @@ gem "spree_paypal_checkout", "~> 0.5"
 
 gem "strivo_admin", path: "engines/strivo_admin"
 
+

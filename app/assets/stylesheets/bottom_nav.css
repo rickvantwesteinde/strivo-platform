@@ -1,0 +1,14 @@
+.sf-bottom-nav{
+  position: fixed; bottom: 0; left: 0; right: 0;
+  display: grid; grid-template-columns: repeat(5,1fr);
+  background:#1f1f1f; color:#fff; border-top:1px solid rgba(255,255,255,.08);
+  height:60px; padding-bottom: env(safe-area-inset-bottom);
+  z-index:1000;
+}
+.sf-bottom-nav .sf-tab{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-size:11px; text-decoration:none; color:#cfcfcf; gap:2px;
+}
+.sf-bottom-nav .sf-tab .sf-ico{ font-size:18px; line-height:1; }
+.sf-bottom-nav .sf-tab.is-active{ color:#ffa347; font-weight:600; }
+body.has-bottom-nav{ padding-bottom:70px; }

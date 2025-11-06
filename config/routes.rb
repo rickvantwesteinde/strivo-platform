@@ -1,6 +1,9 @@
 require "sidekiq/web" # require the web UI
 
 Rails.application.routes.draw do
+  namespace :account do
+    resources :credits, only: [:index]
+  end
 
   draw :credits
   Spree::Core::Engine.add_routes do
