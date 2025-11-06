@@ -1,0 +1,53 @@
+<div class="account-layout">
+  <div class="account-sidebar">
+    <%= render "storefront/account/sidebar", active: :credits rescue nil %>
+  </div>
+
+  <div class="account-content">
+    <h2>Store Credits</h2>
+    <p class="lead">Huidig saldo</p>
+
+    <%# Cumulatief over tijd voor sparkline (oud->nieuw) %>
+    <% cumulative = []; running = 0; @entries.order(created_at: :asc).each { |e| running += e.amount; cumulative << running } %>
+
+    <div class="credit-balance" style="display:flex;align-items:center;gap:16px;">
+      <strong style="font-size:1.8rem;"><%= @balance %></strong>
+      <div class="sparkline" style="color:#1a7f37;">
+        <%= sparkline_svg(cumulative.presence || [@balance]) %>
+      </div>
+    </div>
+
+    <hr>
+
+    <h3>Transactiehistorie</h3>
+    <% if @entries.any? %>
+      <table class="table credits-table">
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Reden</th>
+            <th class="text-right">Mutatie</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @entries.each do |e| %>
+            <tr>
+              <td><%= l(e.created_at, format: :short) %></td>
+              <td><%= e.reason.humanize %></td>
+              <td class="text-right"><%= credit_delta(e.amount) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p>Er zijn nog geen transacties.</p>
+    <% end %>
+  </div>
+</div>
+
+<style>
+  .credits-table { width:100%; }
+  .text-right { text-align:right; }
+  .text-success { color:#1a7f37; }
+  .text-danger  { color:#c2262e; }
+</style>
