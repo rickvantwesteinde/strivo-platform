@@ -1,0 +1,96 @@
+# --- HTTP -> HTTPS (non-www canonical) ---
+server {
+  listen 80;
+  listen [::]:80;
+  server_name strivofit.com www.strivofit.com;
+  return 301 https://strivofit.com$request_uri;
+}
+
+# --- HTTPS canonical: www -> non-www redirect ---
+server {
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
+  server_name www.strivofit.com;
+
+  # Let's Encrypt certs (zelfde cert)
+  ssl_certificate     /etc/letsencrypt/live/strivofit.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/strivofit.com/privkey.pem;
+
+  return 301 https://strivofit.com$request_uri;
+}
+
+# --- HTTPS app: reverse proxy naar Puma op 127.0.0.1:3000 (non-www) ---
+server {
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
+  server_name strivofit.com;
+
+  # Let's Encrypt certs
+  ssl_certificate     /etc/letsencrypt/live/strivofit.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/strivofit.com/privkey.pem;
+
+  # HSTS via Nginx (Rails: hsts=false)
+  add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+
+  # Static rechtstreeks uit /public
+  root /var/www/strivo/public;
+
+  # --- Fix voor bots die //host.tld/assets/... schieten ---
+  location ~* ^/+[^/]+/(assets|packs|uploads)/(.*)$ {
+    return 301 /$1/$2;
+  }
+
+  # --- Static rechtstreeks door Nginx (prefix-match wint van / ) ---
+  location ^~ /assets/ {
+    expires 1y;
+    add_header Cache-Control "public";
+    try_files $uri =404;
+  }
+  location ^~ /packs/ {
+    expires 1y;
+    add_header Cache-Control "public";
+    try_files $uri =404;
+  }
+  location ^~ /uploads/ {
+    expires 1y;
+    add_header Cache-Control "public";
+    try_files $uri =404;
+  }
+  location = /favicon.ico { try_files $uri =404; expires 7d; add_header Cache-Control "public"; }
+  location = /robots.txt { try_files $uri =404; expires 7d; add_header Cache-Control "public"; }
+
+  # --- Bot/noise probes uitzetten ---
+  location ~* ^/(wp-admin|wordpress|wp-login\.php) { return 444; }
+  location = /ga.js { return 404; }
+  location ~* \.(php|asp|aspx|cgi|pl)$ { return 444; }
+
+  # --- App-verkeer -> Puma ---
+  location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host  $host;
+    proxy_set_header X-Forwarded-Port  $server_port;
+
+    # WebSockets (variabele komt uit conf.d/websocket_map.conf)
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+
+    proxy_read_timeout 300;
+    proxy_redirect off;
+  }
+
+  # Upload limiet
+  client_max_body_size 128M;
+
+  # gzip (optioneel)
+  gzip on;
+  gzip_types
+    text/plain text/css application/json application/javascript
+    application/xml application/xml+rss image/svg+xml;
+  gzip_min_length 1024;
+}
