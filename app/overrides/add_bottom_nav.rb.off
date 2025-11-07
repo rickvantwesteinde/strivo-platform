@@ -1,0 +1,7 @@
+# Injecteert de mobile bottom tab bar na de main yield in de Spree layout
+Deface::Override.new(
+  virtual_path: 'spree/layouts/spree_application',
+  name: 'add_mobile_bottom_nav',
+  insert_after: "erb[loud]:contains('yield')",
+  text: "<%= render 'spree/shared/bottom_nav' %>"
+)

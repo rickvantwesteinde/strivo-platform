@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <%= render 'spree/shared/head' %>
+    <!-- Zorg voor edge-to-edge weergave op iOS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+    <!-- Optioneel: basis body class doorgeven -->
+    <%= content_for?(:page_title) ? "<title>#{yield(:page_title)}</title>".html_safe : "" %>
+  </head>
+
+  <body class="<%= content_for?(:body_class) ? yield(:body_class) : '' %>">
+    <%= csrf_meta_tags %>
+
+    <%# ---- Header (veilig proberen te renderen als de partial bestaat) ---- %>
+    <% if lookup_context.find_all('spree/page_sections/header').any? %>
+      <%= render 'spree/page_sections/header' %>
+    <% elsif lookup_context.find_all('spree/shared/header').any? %>
+      <%= render 'spree/shared/header' %>
+    <% end %>
+
+    <%# ---- Flash messages ---- %>
+    <div id="flash-messages" class="container mx-auto px-4">
+      <% flash.each do |type, msg| %>
+        <div class="my-3 px-4 py-3 rounded border border-default">
+          <%= msg %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# ---- Hoofdcontent ---- %>
+    <main id="spree-main">
+      <%= yield %>
+    </main>
+
+    <%# ---- Footer (alleen als ie bestaat) ---- %>
+    <% if lookup_context.find_all('spree/shared/footer').any? %>
+      <%= render 'spree/shared/footer' %>
+    <% end %>
+
+    <%# ---- Mobiele bottom nav: buiten containers en helemaal onderaan ---- %>
+    <% if defined?(spree_current_user) && spree_current_user.present? %>
+      <%= render 'spree/shared/bottom_nav' %>
+    <% end %>
+
+    <%# ---- Eventuele extra scripts uit views ---- %>
+    <%= yield :scripts %>
+  </body>
+</html>

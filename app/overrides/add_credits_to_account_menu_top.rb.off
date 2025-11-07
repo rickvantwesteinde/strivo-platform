@@ -1,0 +1,16 @@
+# frozen_string_literal: true
+
+Deface::Override.new(
+  name: 'add_credits_link_to_account_menu_top',
+  virtual_path: 'spree/shared/account_nav',
+  insert_top: "ul, [data-hook='account_my_account'] ul",
+  text: <<-'HTML'
+    <li data-hook="account_my_credits">
+      <%= link_to(
+            t('account.credits', default: 'Store Credits'),
+            main_app.account_credits_path,
+            class: 'account-menu-link'
+          ) %>
+    </li>
+  HTML
+)

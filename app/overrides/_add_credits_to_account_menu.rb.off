@@ -1,0 +1,33 @@
+# frozen_string_literal: true
+
+# 1) Plaats "Store Credits" boven "Orders & Returns" op /account
+Deface::Override.new(
+  name: 'add_credits_link_to_account_menu',
+  virtual_path: 'spree/users/show',
+  insert_before: "[data-hook='account_my_orders'], erb[loud]:contains('spree.account_path')",
+  text: <<-'HTML'
+    <li data-hook="account_my_credits">
+      <%= link_to(
+            t('account.credits', default: 'Store Credits'),
+            main_app.account_credits_path,
+            class: 'account-menu-link'
+          ) %>
+    </li>
+  HTML
+)
+
+# 2) Plan B: sommige themes renderen het menu via deze partial
+Deface::Override.new(
+  name: 'add_credits_link_to_account_menu_alt',
+  virtual_path: 'spree/shared/account_nav',
+  insert_before: "erb[loud]:contains('spree.account_path')",
+  text: <<-'HTML'
+    <li data-hook="account_my_credits">
+      <%= link_to(
+            t('account.credits', default: 'Store Credits'),
+            main_app.account_credits_path,
+            class: 'account-menu-link'
+          ) %>
+    </li>
+  HTML
+)

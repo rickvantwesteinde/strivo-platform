@@ -1,0 +1,8 @@
+# frozen_string_literal: true
+
+module AccountNavHelper
+  # Optionele helper als je de link ergens in een view wilt renderen.
+  def account_credits_link(text: t('account.credits', default: 'Store Credits'))
+    link_to text, main_app.account_credits_path, class: 'account-menu-link'
+  end
+end

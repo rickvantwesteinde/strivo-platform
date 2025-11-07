@@ -1,0 +1,82 @@
+<%# app/views/spree/shared/_bottom_nav.html.erb %>
+<%# ---------- Routes met fallbacks ---------- %>
+<% home_path     = (spree.root_path rescue '/') %>
+<% classes_path  = (defined?(classes_path) ? classes_path : '/classes') %>
+<% bookings_path = (defined?(storefront_account_bookings_path) ? storefront_account_bookings_path : '/account/bookings') %>
+<% account_path  = (spree.edit_account_path rescue '/account') %>
+
+<%# Active helper inline, zonder globale defs in ERB %>
+<% active = ->(*paths) { Array(paths).flatten.compact.any? { |p| (current_page?(p) rescue false) } } %>
+
+<style>
+  /* ruimte onder page-content zodat nav niets overlapt (incl. iPhone notch) */
+  @media (max-width: 768px) {
+    body { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+  }
+
+  /* full-bleed + iOS Safari glitchen fixen */
+  .bottom-nav-fullbleed {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    width: 100vw;                 /* forceer schermbreedte */
+    margin-left: calc(50% - 50vw);/* strip container-constraints */
+    z-index: 50;
+    height: 56px;
+    padding-bottom: env(safe-area-inset-bottom);
+    backdrop-filter: saturate(180%) blur(10px);
+    -webkit-backdrop-filter: saturate(180%) blur(10px);
+  }
+  .bottom-nav-shadow {
+    box-shadow: 0 -1px 0 var(--border, rgba(0,0,0,.08));
+  }
+  /* horizontale scroll voorkomen op iOS in edge-cases */
+  html, body { overflow-x: hidden; }
+</style>
+
+<nav class="md:hidden bottom-nav-fullbleed bottom-nav-shadow border-t border-default bg-background"
+     role="navigation" aria-label="Primary">
+  <ul class="grid grid-cols-4 text-xs">
+    <li>
+      <%= link_to home_path,
+        class: "flex flex-col items-center justify-center py-2 #{active.(home_path, '/products') ? 'font-semibold' : ''}" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M3 10.5 12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-10.5z" stroke-width="1.5"/>
+        </svg>
+        <span>Home</span>
+      <% end %>
+    </li>
+
+    <li>
+      <%= link_to classes_path,
+        class: "flex flex-col items-center justify-center py-2 #{active.('/classes') ? 'font-semibold' : ''}" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M4 6h16M4 12h16M4 18h10" stroke-width="1.5"/>
+        </svg>
+        <span>Classes</span>
+      <% end %>
+    </li>
+
+    <li>
+      <%= link_to bookings_path,
+        class: "flex flex-col items-center justify-center py-2 #{active.('/account/bookings') ? 'font-semibold' : ''}" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <rect x="3" y="4" width="18" height="18" rx="2" stroke-width="1.5"/>
+          <path d="M3 10h18" stroke-width="1.5"/>
+        </svg>
+        <span>Bookings</span>
+      <% end %>
+    </li>
+
+    <li>
+      <%= link_to account_path,
+        class: "flex flex-col items-center justify-center py-2 #{active.('/account', account_path) ? 'font-semibold' : ''}" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="8" r="4" stroke-width="1.5"/>
+          <path d="M4 20c2-3.5 6-5 8-5s6 1.5 8 5" stroke-width="1.5"/>
+        </svg>
+        <span>Account</span>
+      <% end %>
+    </li>
+  </ul>
+</nav>

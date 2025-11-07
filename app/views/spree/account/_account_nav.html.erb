@@ -1,0 +1,40 @@
+<%# app/views/spree/account/_account_nav.html.erb %>
+<nav class="account-nav" data-hook="account_navigation">
+  <ul class="flex gap-6 overflow-x-auto px-4 border-b border-default">
+    <!-- ✅ Credits -->
+    <li data-hook="account_my_credits">
+      <%= link_to "💰 Credits",
+                  main_app.account_credits_path,
+                  class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'credits'}" %>
+    </li>
+
+    <!-- Orders & Returns -->
+    <li data-hook="account_my_orders">
+      <%= link_to Spree.t(:orders),
+                  spree.account_orders_path,
+                  class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'orders'}" %>
+    </li>
+
+    <!-- Addresses -->
+    <li data-hook="account_my_addresses">
+      <%= link_to Spree.t(:addresses),
+                  spree.account_addresses_path,
+                  class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'address'}" %>
+    </li>
+
+    <!-- Personal details -->
+    <li data-hook="account_my_profile">
+      <%= link_to Spree.t(:account),
+                  spree.edit_account_path,
+                  class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'account'}" %>
+    </li>
+
+    <!-- Logout -->
+    <li data-hook="account_logout" class="ml-auto">
+      <%= link_to Spree.t(:logout),
+                  spree.destroy_spree_user_session_path,
+                  method: :delete,
+                  class: "py-3 block" %>
+    </li>
+  </ul>
+</nav>

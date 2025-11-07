@@ -10,12 +10,20 @@ class BookingManager
   end
 
   def book!
+    # 1) Basischecks
     raise BookingError, I18n.t('storefront.bookings.full', default: 'Deze sessie is vol.') if session.full?
     raise BookingError, I18n.t('storefront.bookings.already_booked', default: 'Je hebt deze sessie al geboekt.') if existing_booking
 
-    ensure_membership_for_booking!
-    ensure_plan_allows_booking!
+    # 2) Logica:
+    # - Unlimited membership -> alleen daily cap check (geen credits)
+    # - Anders -> credits > 0 vereist (membership NIET verplicht)
+    if relevant_membership&.unlimited?
+      raise BookingError, I18n.t('storefront.bookings.daily_cap_reached', default: 'Dagelijkse limiet bereikt.') unless unlimited_plan_allows_booking?
+    else
+      raise BookingError, I18n.t('storefront.bookings.no_credits', default: 'Onvoldoende credits.') unless credits_available?
+    end
 
+    # 3) Boeken + ledger
     Booking.transaction do
       booking = session.bookings.create!(user:, status: :confirmed)
       record_booking_charge!(booking)
@@ -62,28 +70,12 @@ class BookingManager
     end
   end
 
-  def ensure_membership_for_booking!
-    membership = relevant_membership
-    raise BookingError, I18n.t('storefront.bookings.no_membership', default: 'Geen actief lidmaatschap voor deze locatie.') if membership.nil?
-    raise BookingError, I18n.t('storefront.bookings.no_membership', default: 'Geen actief lidmaatschap voor deze locatie.') unless membership.gym_id == session.gym_id
-    raise BookingError, I18n.t('storefront.bookings.no_membership', default: 'Geen actief lidmaatschap voor deze locatie.') unless membership.active_on?(session.starts_at.to_date)
-  end
-
-  def ensure_plan_allows_booking!
-    membership = relevant_membership
-    if membership.unlimited?
-      raise BookingError, I18n.t('storefront.bookings.daily_cap_reached', default: 'Dagelijkse limiet bereikt.') unless unlimited_plan_allows_booking?
-    else
-      raise BookingError, I18n.t('storefront.bookings.no_credits', default: 'Onvoldoende credits.') unless credits_available?
-    end
-  end
-
   def existing_booking
     @existing_booking ||= session.bookings.find_by(user:, status: :confirmed)
   end
 
   def credits_available?
-    CreditLedger.remaining_for(user:, gym: session.gym) > 0
+    CreditLedger.balance_for(user:, gym: session.gym) > 0
   end
 
   def unlimited_plan_allows_booking?
@@ -104,16 +96,30 @@ class BookingManager
       .count < cap
   end
 
+  # ✅ Altijd 1 credit afschrijven, behalve bij unlimited
   def record_booking_charge!(booking)
-    return unless relevant_membership&.credit?
+    return if relevant_membership&.unlimited? # unlimited gebruikt geen credits
 
-    CreditLedger.create!(user:, gym: session.gym, booking:, amount: -1, reason: :booking_charge)
+    CreditLedger.create!(
+      user: user,
+      gym: session.gym,
+      booking: booking,
+      amount: -1,
+      reason: :booking
+    )
   end
 
+  # ✅ Altijd 1 credit terug (tenzij cutoff gepasseerd of unlimited)
   def refund_if_eligible!(booking)
-    return unless relevant_membership&.credit?
     return if session.cutoff_passed?
+    return if relevant_membership&.unlimited? # unlimited werkte niet met credits
 
-    CreditLedger.create!(user:, gym: session.gym, booking:, amount: 1, reason: :booking_refund)
+    CreditLedger.create!(
+      user: user,
+      gym: session.gym,
+      booking: booking,
+      amount: 1,
+      reason: :refund
+    )
   end
 end

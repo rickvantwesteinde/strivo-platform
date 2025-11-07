@@ -1,0 +1,7 @@
+# frozen_string_literal: true
+module Spree
+  module BaseHelper
+    # Maak NavigationHelper-methoden (active_tab?, credits_balance_badge) zichtbaar in Spree views
+    include ::NavigationHelper
+  end
+end

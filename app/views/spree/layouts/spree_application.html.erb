@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="<%= (respond_to?(:current_store) && current_store&.theme) || 'default' %>">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title><%= content_for?(:title) ? yield(:title) : ((respond_to?(:current_store) && current_store&.name) || "Store") %></title>
+
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%# Spree head-includes (favicon, meta, assets, etc.) - val veilig terug als partial ontbreekt %>
+    <%= (render 'spree/shared/head' rescue nil) %>
+
+    <%# Extra head content van views %>
+    <%= yield :head %>
+  </head>
+
+  <body class="<%= (respond_to?(:body_class) ? body_class : '') %>">
+    <%# Header (val terug als partial ontbreekt) %>
+    <%= (render 'spree/page_sections/header', section: (defined?(@header_section) && @header_section) ) rescue (render('spree/shared/header') rescue nil) %>
+
+    <main id="content" role="main">
+      <%= (render 'spree/shared/flash' rescue nil) %>
+      <%= yield %>
+    </main>
+
+    <%# Footer (optioneel) %>
+    <%= (render 'spree/shared/footer', section: (defined?(@footer_section) && @footer_section)) rescue nil %>
+
+    <%# Slideover-panels die Spree verwacht, met zachte fallback %>
+    <%= (render 'spree/shared/cart_pane', section: (defined?(@header_section) && @header_section)) rescue nil %>
+    <% if (defined?(show_account_pane?) && show_account_pane?) rescue false %>
+      <%= (render 'spree/shared/account_pane', section: (defined?(@header_section) && @header_section)) rescue nil %>
+    <% end %>
+
+    <%# --- Mobile bottom tab bar: ALTIJD buiten containers renderen --- %>
+    <%= render('spree/shared/bottom_nav') if (defined?(spree_current_user) && spree_current_user.present?) %>
+
+    <%# Extra scripts van views %>
+    <%= yield :scripts %>
+  </body>
+</html>

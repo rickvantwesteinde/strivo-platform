@@ -2,13 +2,11 @@
 
 module Storefront
   class BaseController < ApplicationController
-    # Zorg dat Devise/Spree helpers beschikbaar zijn
     include Devise::Controllers::Helpers
     include Spree::Core::ControllerHelpers::Auth
     include Spree::AuthenticationHelpers
     include Storefront::CreditsHelper
 
-    # Enige guard die we willen: redirect ALTIJD naar spree_login_path
     before_action :require_spree_login
     before_action :load_storefront_context
 
@@ -17,10 +15,9 @@ module Storefront
 
     private
 
-    # Simpele guard die exact naar spree_login_path redirect
+    # Redirect altijd naar spree_login_path als je niet ingelogd bent
     def require_spree_login
       return if spree_current_user.present?
-
       redirect_to spree_login_path
     end
 
@@ -38,12 +35,11 @@ module Storefront
 
     def available_memberships
       return [] if spree_current_user.nil?
-
-      @available_memberships ||= spree_current_user.memberships.includes(:gym).select { |membership| membership.active_on?(Date.current) }
+      @available_memberships ||= spree_current_user.memberships.includes(:gym).select { |m| m.active_on?(Date.current) }
     end
 
     def load_storefront_context
-      @current_gym = resolve_current_gym
+      @current_gym        = resolve_current_gym
       @current_membership = resolve_current_membership
     end
 
@@ -53,10 +49,10 @@ module Storefront
       memberships = spree_current_user.memberships.includes(:gym)
       return default_gym if memberships.empty?
 
-      active_memberships = memberships.select { |membership| membership.active_on?(Date.current) }
+      active_memberships = memberships.select { |m| m.active_on?(Date.current) }
 
       if params[:gym_slug].present?
-        selected = memberships.find { |membership| membership.gym.slug == params[:gym_slug] }
+        selected = memberships.find { |m| m.gym.slug == params[:gym_slug] }
         return selected.gym if selected
       end
 
