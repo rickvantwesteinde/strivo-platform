@@ -27,9 +27,7 @@
                     <div class="text-sm text-gray-600">
                       <% datetime = s.respond_to?(:starts_at) ? s.starts_at : (s.respond_to?(:start_at) ? s.start_at : nil) %>
                       <%= datetime ? (l(datetime, format: :long) rescue datetime) : "-" %>
-                      <% if (t = s.try(:trainer)) %>
-                        · Trainer: <%= t.try(:user)&.try(:email) || t.try(:name) || "n.n." %>
-                      <% end %>
+                      
                     </div>
                   </div>
                   <%= link_to "Details",

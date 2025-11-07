@@ -1,29 +1,29 @@
-tee app/views/storefront/account/bookings/index.html.erb >/dev/null <<'EOF'
-<div class="max-w-3xl mx-auto p-6 space-y-6">
-  <h1 class="text-2xl font-semibold">Mijn boekingen</h1>
+<%# app/views/storefront/account/bookings/index.html.erb %>
 
-  <% if @bookings.present? %>
-    <ul class="divide-y rounded-lg border">
-      <% @bookings.each do |b| %>
-        <% s = b.try(:session) %>
-        <li class="p-4 flex items-center justify-between">
+<%= render 'themes/default/spree/account/account_nav', current: 'bookings' %>
+
+<div class="max-w-3xl mx-auto p-6">
+  <h1 class="text-2xl font-semibold mb-4">Mijn boekingen</h1>
+
+  <% if @bookings.blank? %>
+    <p class="text-muted-foreground">Je hebt nog geen boekingen.</p>
+  <% else %>
+    <ul class="divide-y divide-border">
+      <% @bookings.each do |booking| %>
+        <% s = booking.try(:session) %>
+        <li class="py-4 flex items-center justify-between">
           <div>
-            <div class="font-medium"><%= s.try(:class_type)&.try(:name) || "Sessie" %></div>
-            <div class="text-sm text-gray-600">
-              <%= s&.try(:start_at) || s&.try(:starts_at) ? (l(s.try(:start_at) || s.try(:starts_at), format: :long) rescue (s.try(:start_at) || s.try(:starts_at))) : "-" %>
+            <div class="font-medium"><%= s&.class_type&.name || "Sessie" %></div>
+            <div class="text-sm text-muted-foreground">
+              <%= s&.start_at ? l(s.start_at, format: :long) : "TBD" %>
+              <% if s&.trainer&.user %> · Trainer: <%= s.trainer.user.email %><% end %>
             </div>
           </div>
-          <% if s %>
-            <div class="flex items-center gap-3">
-              <%= link_to "Details", storefront_session_path(s), class: "rounded-md px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200" %>
-              <%= button_to "Annuleer", storefront_booking_path(b), method: :delete, class: "rounded-md px-3 py-1.5 text-sm bg-red-600 text-white hover:bg-red-700" %>
-            </div>
-          <% end %>
+          <span class="text-sm">
+            Credit gebruikt: <%= (booking.respond_to?(:credit_cost) && booking.credit_cost.present?) ? booking.credit_cost : 1 %>
+          </span>
         </li>
       <% end %>
     </ul>
-  <% else %>
-    <p class="text-gray-600">Je hebt nog geen boekingen.</p>
   <% end %>
 </div>
-EOF

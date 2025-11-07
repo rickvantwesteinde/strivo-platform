@@ -53,9 +53,9 @@ module Storefront
         if (assoc = Session.reflect_on_association(:trainer))
           # probeer trainer.user ook mee te nemen
           if assoc.klass&.reflect_on_association(:user)
-            upcoming = upcoming.includes(trainer: :user)
+            upcoming = upcoming
           else
-            upcoming = upcoming.includes(:trainer)
+            upcoming = upcoming
           end
         end
 

@@ -1,30 +1,41 @@
+<%# app/views/account/pane/show.html.erb %>
 <% if spree_current_user %>
   <ul role="list" class="divide-y divide-border">
     <li>
-      <%= link_to Spree.t(:my_account), spree.account_path, class: 'menu-item block px-4 py-3' %>
-    </li>
-    <li>
-      <%= link_to Spree.t(:my_orders), spree.orders_path, class: 'menu-item block px-4 py-3' %>
-    </li>
-    <li>
-      <%= link_to t('account.credits', default: 'Store Credits'),
-                  main_app.account_credits_path,
+      <%= link_to Spree.t(:my_account),
+                  spree.account_path,
                   class: 'menu-item block px-4 py-3' %>
     </li>
+
     <li>
-      <%= link_to Spree.t(:addresses), spree.addresses_path, class: 'menu-item block px-4 py-3' %>
+      <%= link_to Spree.t(:my_orders),
+                  spree.account_orders_path,
+                  class: 'menu-item block px-4 py-3' %>
     </li>
+
+    <li>
+      <%= link_to Spree.t(:addresses),
+                  spree.account_addresses_path,
+                  class: 'menu-item block px-4 py-3' %>
+    </li>
+
+    <li>
+      <%= link_to 'Bookings',
+                  storefront_account_bookings_path,
+                  class: 'menu-item block px-4 py-3' %>
+    </li>
+
     <li>
       <%= link_to Spree.t(:logout),
                   spree.destroy_spree_user_session_path,
                   method: :delete,
-                  data: { turbo_method: :delete },
+                  data: { turbo_method: :delete, turbo: false },
                   class: 'menu-item block px-4 py-3 text-destructive' %>
     </li>
   </ul>
 <% else %>
   <div class="p-4">
-    <%= link_to Spree.t(:login), spree_login_path, class: 'menu-item block px-4 py-3' %>
+    <%= link_to Spree.t(:login),  spree_login_path,  class: 'menu-item block px-4 py-3' %>
     <%= link_to Spree.t(:signup), spree_signup_path, class: 'menu-item block px-4 py-3' %>
   </div>
 <% end %>

@@ -1,40 +1,41 @@
 <%# app/views/spree/account/_account_nav.html.erb %>
-<nav class="account-nav" data-hook="account_navigation">
-  <ul class="flex gap-6 overflow-x-auto px-4 border-b border-default">
-    <!-- ✅ Credits -->
-    <li data-hook="account_my_credits">
-      <%= link_to "💰 Credits",
-                  main_app.account_credits_path,
-                  class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'credits'}" %>
-    </li>
+<%# Fallback voor als theme-override ontbreekt. Zelfde structuur. %>
 
-    <!-- Orders & Returns -->
+<% orders_path     = spree.account_orders_path %>
+<% addresses_path  = spree.account_addresses_path %>
+<% bookings_path   = storefront_account_bookings_path %>
+<% logout_path     = spree.destroy_spree_user_session_path %>
+
+<nav class="account-nav" data-hook="account_navigation">
+  <ul class="flex gap-6 overflow-x-auto px-4 border-b border-default text-sm">
+    <!-- Orders -->
     <li data-hook="account_my_orders">
       <%= link_to Spree.t(:orders),
-                  spree.account_orders_path,
+                  orders_path,
                   class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'orders'}" %>
     </li>
 
     <!-- Addresses -->
     <li data-hook="account_my_addresses">
       <%= link_to Spree.t(:addresses),
-                  spree.account_addresses_path,
+                  addresses_path,
                   class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'address'}" %>
     </li>
 
-    <!-- Personal details -->
-    <li data-hook="account_my_profile">
-      <%= link_to Spree.t(:account),
-                  spree.edit_account_path,
-                  class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'account'}" %>
+    <!-- Bookings -->
+    <li data-hook="account_my_bookings">
+      <%= link_to 'Bookings',
+                  bookings_path,
+                  class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'bookings'}" %>
     </li>
 
-    <!-- Logout -->
+    <!-- Logout (DELETE) -->
     <li data-hook="account_logout" class="ml-auto">
       <%= link_to Spree.t(:logout),
-                  spree.destroy_spree_user_session_path,
+                  logout_path,
                   method: :delete,
-                  class: "py-3 block" %>
+                  data: { turbo_method: :delete, turbo: false },
+                  class: "py-3 block text-red-600 hover:underline" %>
     </li>
   </ul>
 </nav>

@@ -1,43 +1,52 @@
-<%# themes/default/spree/account/_account_nav.html.erb %>
-<%# Helpers die per versie kunnen verschillen -> veilige fallbacks %>
-<% orders_path     = (spree.account_orders_path     rescue '/account/orders') %>
-<% addresses_path  = (spree.account_addresses_path  rescue '/account/addresses') %>
-<% profile_path    = (spree.edit_account_path       rescue '/account/profile/edit') %>
-<% logout_path     = (spree.destroy_spree_user_session_path rescue '/user/sign_out') %>
-<% credits_path    = (main_app.account_credits_path rescue '/account/credits') %>
+<%# app/views/themes/default/spree/account/_account_nav.html.erb %>
+<%# Compacte, consistente account-navigatie %>
 
-<nav class="account-nav" data-hook="account_navigation">
-  <ul class="flex gap-6 overflow-x-auto px-4 border-b border-default">
+<% orders_path    = spree.account_orders_path %>
+<% addresses_path = spree.account_addresses_path %>
+<% bookings_path  = main_app.storefront_account_bookings_path %>
+<% logout_path    = spree.destroy_user_session_path(locale: I18n.locale) %>
 
-    <li data-hook="account_my_credits">
-      <%= link_to "💰 Credits",
-                  credits_path,
-                  class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'credits'}" %>
-    </li>
-
+<nav class="spree-account-nav" data-hook="account_navigation">
+  <ul class="flex gap-6 overflow-x-auto px-4 border-b border-default text-sm">
+    <!-- Orders -->
     <li data-hook="account_my_orders">
       <%= link_to Spree.t(:orders),
                   orders_path,
                   class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'orders'}" %>
     </li>
 
+    <!-- Addresses -->
     <li data-hook="account_my_addresses">
       <%= link_to Spree.t(:addresses),
                   addresses_path,
                   class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'address'}" %>
     </li>
 
-    <li data-hook="account_my_profile">
-      <%= link_to Spree.t(:account),
-                  profile_path,
-                  class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'account'}" %>
+    <!-- Bookings (host app) -->
+    <li data-hook="account_my_bookings">
+      <%= link_to 'Bookings',
+                  bookings_path,
+                  class: "py-3 block #{'font-semibold border-b-2' if local_assigns[:current] == 'bookings'}" %>
     </li>
 
+    <!-- Logout (Spree/Devise) -->
     <li data-hook="account_logout" class="ml-auto">
+      <%# OPTIE A: link_to met Turbo method override %>
       <%= link_to Spree.t(:logout),
                   logout_path,
-                  method: :delete,
-                  class: "py-3 block" %>
+                  data: { turbo_method: :delete, turbo_confirm: Spree.t(:are_you_sure) },
+                  rel: 'nofollow',
+                  class: "py-3 block text-red-600 hover:underline" %>
+
+      <%# -- OF --
+          OPTIE B (nog robuuster): button_to genereert een <form> met method=delete
+          Laat hierboven staan tenzij je per se een <button> wilt.
+          <%= button_to Spree.t(:logout),
+                        logout_path,
+                        method: :delete,
+                        form: { data: { turbo: "true" } },
+                        class: "py-3 text-red-600 hover:underline bg-transparent p-0 border-0 cursor-pointer" %>
+      %>
     </li>
   </ul>
 </nav>

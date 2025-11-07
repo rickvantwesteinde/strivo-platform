@@ -16,9 +16,7 @@ tee app/views/storefront/classes/index.html.erb >/dev/null <<'EOF'
               <li class="p-4 flex items-center justify-between">
                 <div class="text-sm text-gray-700">
                   <div><strong><%= l(s.try(:start_at) || s.try(:starts_at), format: :long) rescue (s.try(:start_at) || s.try(:starts_at)) %></strong></div>
-                  <% if (t = s.try(:trainer)) %>
-                    <div>Trainer: <%= t.try(:user)&.try(:email) || t.try(:name) %></div>
-                  <% end %>
+                  
                 </div>
                 <%= link_to "Details", storefront_session_path(s), class: "rounded-md px-3 py-1.5 text-sm bg-gray-900 text-white hover:bg-gray-800" %>
               </li>

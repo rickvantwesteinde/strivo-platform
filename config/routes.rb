@@ -1,26 +1,47 @@
+# config/routes.rb
 # frozen_string_literal: true
 
 require "sidekiq/web"
 
 Rails.application.routes.draw do
-  # -------------------------
+  # ============================================================
+  # Back-compat redirects
+  # ============================================================
+  get "/account",         to: redirect("/account/orders"), status: 302
+  get "/account/credits", to: redirect("/account/orders"), status: 302
+
+  match "(:locale)/account/store_credits",
+        to: redirect("/account/orders"),
+        via: :get,
+        constraints: { locale: /#{Spree.available_locales.join("|")}/ },
+        as: :legacy_store_credits_redirect
+
+  # ============================================================
   # App-level account routes
-  # -------------------------
+  # ============================================================
   namespace :account do
-    resources :credits, only: [:index]
-    get :pane, to: "pane#show" # => account_pane_path
+    get :pane, to: "pane#show"
   end
 
-  # -------------------------
-  # Extra route definitions
-  # -------------------------
-  draw :credits
+  # ============================================================
+  # Strivo storefront
+  # ============================================================
+  namespace :storefront, path: "", module: :storefront do
+    resources :classes,  only: [:index]
+    resources :sessions, only: [:show]
+    resources :bookings, only: [:create, :destroy]
 
-  # -------------------------
-  # Spree routes (auth)
-  # -------------------------
+    namespace :account, module: :account do
+      resources :bookings, only: [:index]
+    end
+
+    get "club", to: "club#index", as: :club
+  end
+
+  # ============================================================
+  # Spree auth routes (Devise)
+  # ============================================================
   Spree::Core::Engine.add_routes do
-    # Storefront user auth
     scope "(:locale)", locale: /#{Spree.available_locales.join("|")}/, defaults: { locale: nil } do
       devise_for(
         Spree.user_class.model_name.singular_route_key,
@@ -35,7 +56,6 @@ Rails.application.routes.draw do
       )
     end
 
-    # Admin auth
     devise_for(
       Spree.admin_user_class.model_name.singular_route_key,
       class_name: Spree.admin_user_class.to_s,
@@ -49,32 +69,13 @@ Rails.application.routes.draw do
     )
   end
 
-  # -------------------------
-  # Strivo storefront routes
-  # -------------------------
-  namespace :storefront, path: "", module: :storefront do
-    resources :classes,  only: [:index]
-    resources :sessions, only: [:show]
-    resources :bookings, only: [:create, :destroy]
+  # ============================================================
+  # Engines & misc
+  # ============================================================
+  mount Spree::Core::Engine,   at: "/"
+  mount Strivo::Admin::Engine, at: "/admin/strivo"
+  mount Sidekiq::Web,          at: "/sidekiq"
 
-    namespace :account, module: :account do
-      resources :bookings, only: [:index]
-    end
-
-    # <<-- HIER staat ‘club’ correct genamespace’d
-    get "club", to: "club#index", as: :club
-  end
-
-  # -------------------------
-  # Mount engines & dashboards
-  # -------------------------
-  mount Spree::Core::Engine,    at: "/"
-  mount Strivo::Admin::Engine,  at: "/admin/strivo"
-  mount Sidekiq::Web,           at: "/sidekiq"
-
-  # -------------------------
-  # Misc
-  # -------------------------
   get "up" => "rails/health#show", as: :rails_health_check
   root "spree/home#index"
 end
