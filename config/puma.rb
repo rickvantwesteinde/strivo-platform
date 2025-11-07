@@ -1,23 +1,30 @@
-# /var/www/strivo/config/puma.rb
-directory "/var/www/strivo"
-environment ENV.fetch("RAILS_ENV","production")
+# frozen_string_literal: true
 
+app_root = File.expand_path("..", __dir__)
+environment "production"
+
+# Threads/workers
 threads_count = Integer(ENV.fetch("RAILS_MAX_THREADS", 5))
 threads threads_count, threads_count
 workers Integer(ENV.fetch("WEB_CONCURRENCY", 2))
+
 preload_app!
 
-pidfile "/var/www/strivo/tmp/pids/puma.pid"
-state_path "/var/www/strivo/tmp/pids/puma.state"
-
-# Belangrijk: TCP bind voor Nginx proxy
-
-stdout_redirect "/var/www/strivo/log/puma.stdout.log", "/var/www/strivo/log/puma.stderr.log", true
-
-on_worker_boot do
-  require "active_record"
-  ActiveRecord::Base.connection_pool.disconnect! rescue nil
-  ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
-end
-# --- systemd-safe defaults ---
+# Bind op TCP (matcht je logs en is simpel met Nginx)
 bind "tcp://127.0.0.1:3000"
+
+# PID/state (optioneel maar netjes)
+pidfile File.join(app_root, "tmp/pids/puma.pid")
+state_path File.join(app_root, "tmp/pids/puma.state")
+
+# Graceful timeouts
+worker_timeout 60 if ENV["RAILS_ENV"] == "development"
+worker_shutdown_timeout 30
+
+before_worker_boot do
+  if defined?(ActiveRecord::Base)
+    ActiveRecord::Base.establish_connection
+  end
+end
+
+plugin :tmp_restart

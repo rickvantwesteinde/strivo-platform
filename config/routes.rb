@@ -17,7 +17,7 @@ Rails.application.routes.draw do
   draw :credits
 
   # -------------------------
-  # Spree routes
+  # Spree routes (auth)
   # -------------------------
   Spree::Core::Engine.add_routes do
     # Storefront user auth
@@ -60,17 +60,20 @@ Rails.application.routes.draw do
     namespace :account, module: :account do
       resources :bookings, only: [:index]
     end
+
+    # <<-- HIER staat ‘club’ correct genamespace’d
+    get "club", to: "club#index", as: :club
   end
 
   # -------------------------
   # Mount engines & dashboards
   # -------------------------
-  mount Spree::Core::Engine, at: "/"
-  mount Strivo::Admin::Engine, at: "/admin/strivo"
-  mount Sidekiq::Web => "/sidekiq"
+  mount Spree::Core::Engine,    at: "/"
+  mount Strivo::Admin::Engine,  at: "/admin/strivo"
+  mount Sidekiq::Web,           at: "/sidekiq"
 
   # -------------------------
-  # Miscellaneous
+  # Misc
   # -------------------------
   get "up" => "rails/health#show", as: :rails_health_check
   root "spree/home#index"

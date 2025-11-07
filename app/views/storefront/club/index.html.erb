@@ -1,0 +1,13 @@
+<div class="max-w-3xl mx-auto p-6">
+  <h1 class="text-2xl font-semibold mb-4">Club</h1>
+  <% if @gym %>
+    <div class="space-y-2">
+      <p><strong>Naam:</strong> <%= @gym.name %></p>
+      <% if @gym.respond_to?(:address) && @gym.address.present? %>
+        <p><strong>Adres:</strong> <%= @gym.address %></p>
+      <% end %>
+    </div>
+  <% else %>
+    <p>Nog geen gym geconfigureerd.</p>
+  <% end %>
+</div>

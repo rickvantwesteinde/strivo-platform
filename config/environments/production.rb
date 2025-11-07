@@ -13,7 +13,7 @@ Rails.application.configure do
   config.consider_all_requests_local = false
   config.action_controller.perform_caching = true
 
-  # Static files (Rails alleen als env is gezet; primair via NGINX)
+  # Static files (primair via Nginx; Rails mag ook dienen als fallback)
   config.public_file_server.enabled = true
   config.public_file_server.headers = {
     "Cache-Control" => "public, max-age=#{1.year.to_i}"
@@ -25,9 +25,15 @@ Rails.application.configure do
   # Storage
   config.active_storage.service = :local
 
-  # SSL: NGINX doet HSTS; hier alleen force_ssl en hsts uit
-  config.force_ssl   = true
+  # --- SSL / HSTS ---
+  # Nginx forceert HTTPS en zet HSTS; Rails hoeft geen HSTS te sturen.
+  config.force_ssl   = false
   config.ssl_options = { hsts: false }
+  # Zorg dat Rails per ongeluk geen HSTS header meestuurt:
+  config.action_dispatch.default_headers.delete('Strict-Transport-Security')
+
+  # URL helpers
+  config.action_controller.default_url_options = { host: "strivofit.com", protocol: "https" }
 
   # Logging
   config.log_tags  = [:request_id]
@@ -50,7 +56,7 @@ Rails.application.configure do
     config.cache_store = :memory_store, { size: 64.megabytes }
   end
 
-  # Hosts (optioneel localhost vrijgeven voor curl zonder Host-header)
+  # Hosts (HTTP Host Authorization)
   config.hosts << "strivofit.com"
   config.hosts << "www.strivofit.com"
   # config.hosts << "127.0.0.1"

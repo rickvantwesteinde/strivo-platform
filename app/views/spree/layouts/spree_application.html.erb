@@ -8,15 +8,17 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <%# Spree head-includes (favicon, meta, assets, etc.) - val veilig terug als partial ontbreekt %>
     <%= (render 'spree/shared/head' rescue nil) %>
-
-    <%# Extra head content van views %>
     <%= yield :head %>
+
+    <style>
+      :root { --safe-bottom: env(safe-area-inset-bottom); }
+      main { padding-bottom: calc(72px + var(--safe-bottom, 0px)); }
+      nav.sf-bottom-nav { padding-bottom: var(--safe-bottom, 0px); }
+    </style>
   </head>
 
   <body class="<%= (respond_to?(:body_class) ? body_class : '') %>">
-    <%# Header (val terug als partial ontbreekt) %>
     <%= (render 'spree/page_sections/header', section: (defined?(@header_section) && @header_section) ) rescue (render('spree/shared/header') rescue nil) %>
 
     <main id="content" role="main">
@@ -24,19 +26,16 @@
       <%= yield %>
     </main>
 
-    <%# Footer (optioneel) %>
     <%= (render 'spree/shared/footer', section: (defined?(@footer_section) && @footer_section)) rescue nil %>
 
-    <%# Slideover-panels die Spree verwacht, met zachte fallback %>
     <%= (render 'spree/shared/cart_pane', section: (defined?(@header_section) && @header_section)) rescue nil %>
     <% if (defined?(show_account_pane?) && show_account_pane?) rescue false %>
       <%= (render 'spree/shared/account_pane', section: (defined?(@header_section) && @header_section)) rescue nil %>
     <% end %>
 
-    <%# --- Mobile bottom tab bar: ALTIJD buiten containers renderen --- %>
+    <%# Toon bottom nav alleen als ingelogd: %>
     <%= render('spree/shared/bottom_nav') if (defined?(spree_current_user) && spree_current_user.present?) %>
 
-    <%# Extra scripts van views %>
     <%= yield :scripts %>
   </body>
 </html>

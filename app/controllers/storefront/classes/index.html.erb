@@ -1,0 +1,50 @@
+<div class="max-w-3xl mx-auto p-6 space-y-8">
+  <header class="space-y-1">
+    <h1 class="text-2xl font-semibold">Lessen</h1>
+    <% if @active_membership %>
+      <p class="text-sm text-gray-600">Actief lidmaatschap: <%= @active_membership.try(:name) || "actief" %></p>
+    <% end %>
+    <% if @gym %>
+      <p class="text-sm text-gray-500">Gym: <%= @gym.try(:name) %></p>
+    <% end %>
+  </header>
+
+  <% if @class_types.present? %>
+    <div class="space-y-8">
+      <% @class_types.each do |ct| %>
+        <% sessions = @sessions_by_class_type[ct.id] || [] %>
+        <section class="space-y-3">
+          <h2 class="text-xl font-medium"><%= ct.try(:name) || "Class" %></h2>
+
+          <% if sessions.any? %>
+            <ul class="divide-y rounded-lg border bg-white">
+              <% sessions.each do |s| %>
+                <li class="p-4 flex items-center justify-between">
+                  <div>
+                    <div class="font-medium">
+                      <%= s.try(:title).presence || ct.try(:name) || "Sessie" %>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                      <% datetime = s.respond_to?(:starts_at) ? s.starts_at : (s.respond_to?(:start_at) ? s.start_at : nil) %>
+                      <%= datetime ? (l(datetime, format: :long) rescue datetime) : "-" %>
+                      <% if (t = s.try(:trainer)) %>
+                        · Trainer: <%= t.try(:user)&.try(:email) || t.try(:name) || "n.n." %>
+                      <% end %>
+                    </div>
+                  </div>
+                  <%= link_to "Details",
+                        storefront_session_path(s),
+                        class: "rounded-md px-3 py-1.5 text-sm font-medium bg-gray-900 text-white hover:bg-gray-800" %>
+                </li>
+              <% end %>
+            </ul>
+          <% else %>
+            <p class="text-gray-600">Geen komende sessies voor <%= ct.try(:name) || "deze class" %>.</p>
+          <% end %>
+        </section>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-gray-600">Nog geen classes beschikbaar.</p>
+  <% end %>
+</div>

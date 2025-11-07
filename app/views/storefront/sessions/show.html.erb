@@ -1,6 +1,11 @@
 <h1><%= @session.class_type.name %></h1>
 
-<p><strong>Wanneer:</strong> <%= l(@session.starts_at, format: :long) %> - <%= l(@session.ends_at, format: :long) %></p>
+<p><strong>Wanneer:</strong>
+  <% sd = session_datetime(@session) %>
+  <% ed = (@session.respond_to?(:ends_at) && @session.ends_at.present?) ? @session.ends_at : nil %>
+  <%= sd ? (l(sd, format: :long) rescue sd) : "-" %>
+  <% if ed %> - <%= (l(ed, format: :long) rescue ed) %><% end %>
+</p>
 <p><strong>Locatie:</strong> <%= @session.gym %></p>
 <% if @session.trainer_name.present? %>
   <p><strong>Trainer:</strong> <%= @session.trainer_name %></p>

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Storefront
-  class SessionsController < BaseController
+  class SessionsController < Storefront::BaseController
     def show
       @session = current_gym.sessions.find(params[:id])
 

@@ -1,11 +1,12 @@
 # frozen_string_literal: true
+
 module NavigationHelper
-  # Bepaal of een pad actief is (voor menu highlighting)
+  # === 1. Active tab detection (bestaand)
   def active_tab?(*paths)
     Array(paths).compact.any? { |p| current_page?(p) rescue false }
   end
 
-  # Klein badge-component met huidig creditsaldo
+  # === 2. Credits badge component (bestaand)
   def credits_balance_badge
     return unless respond_to?(:spree_current_user, true) && spree_current_user
 
@@ -19,7 +20,6 @@ module NavigationHelper
         0
       end
 
-    # route naar jouw eigen credits-pagina
     path = main_app.respond_to?(:account_credits_path) ? main_app.account_credits_path : '/account/credits'
 
     link_to path,
@@ -35,5 +35,38 @@ module NavigationHelper
   rescue => e
     Rails.logger.warn("credits_balance_badge failed: #{e.class}: #{e.message}")
     nil
+  end
+
+  # === 3. Bottom navigation tabs (nieuw)
+  Tab = Struct.new(:key, :name, :path)
+
+  def bottom_tabs
+    [
+      Tab.new(:home,     "Home",     main_app.root_path),
+      Tab.new(:bookings, "Bookings", main_app.url_for(controller: "/account/bookings", action: :index)),
+      Tab.new(:club,     "Club",     main_app.club_path),
+      Tab.new(:profile,  "Profile",  main_app.url_for(controller: "/account/orders", action: :index))
+    ]
+  end
+
+  def active_tab?(key)
+    case key
+    when :home
+      current_page?(main_app.root_path)
+    when :bookings
+      controller_path.start_with?("account/bookings")
+    when :club
+      request.path == main_app.club_path
+    when :profile
+      request.path.start_with?("/account")
+    else
+      false
+    end
+  rescue
+    false
+  end
+
+  def bottom_nav_css_for(key)
+    active_tab?(key) ? "text-blue-600 font-semibold" : "text-gray-500"
   end
 end

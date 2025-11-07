@@ -4,19 +4,15 @@
     <span class="sf-ico">🏠</span><span>Home</span>
   <% end %>
 
-  <%= link_to classes_path, class: "sf-tab #{'is-active' if request.path.starts_with?('/classes')}" do %>
-    <span class="sf-ico">📅</span><span>Lessen</span>
+  <%= link_to storefront_account_bookings_path, class: "sf-tab #{'is-active' if request.path.starts_with?('/account/bookings')}" do %>
+    <span class="sf-ico">🗓️</span><span>Bookings</span>
   <% end %>
 
-  <%= link_to account_bookings_path, class: "sf-tab #{'is-active' if request.path.starts_with?('/account/bookings')}" do %>
-    <span class="sf-ico">🗓️</span><span>Boekingen</span>
+  <%= link_to club_path, class: "sf-tab #{'is-active' if request.path.starts_with?('/club')}" do %>
+    <span class="sf-ico">🏛️</span><span>Club</span>
   <% end %>
 
-  <%= link_to account_credits_path, class: "sf-tab #{'is-active' if request.path.starts_with?('/account/credits')}" do %>
-    <span class="sf-ico">🪙</span><span>Credits</span>
-  <% end %>
-
-  <%= link_to spree.account_path, class: "sf-tab #{'is-active' if request.path.starts_with?('/account') && !request.path.starts_with?('/account/credits') && !request.path.starts_with?('/account/bookings')}" do %>
-    <span class="sf-ico">👤</span><span>Account</span>
+  <%= link_to spree.account_path, class: "sf-tab #{'is-active' if request.path.starts_with?('/account') && !request.path.starts_with?('/account/bookings')}" do %>
+    <span class="sf-ico">👤</span><span>Profile</span>
   <% end %>
 </nav>
