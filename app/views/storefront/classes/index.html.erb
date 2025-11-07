@@ -1,36 +1,36 @@
-<h1>Lessen - <%= current_gym.name %></h1>
+tee app/views/storefront/classes/index.html.erb >/dev/null <<'EOF'
+<div class="max-w-3xl mx-auto p-6 space-y-8">
+  <header>
+    <h1 class="text-2xl font-semibold">Lessen</h1>
+    <p class="text-gray-600">Komende sessies</p>
+  </header>
 
-<% if @active_membership&.unlimited? %>
-  <p>Je onbeperkte plan laat maximaal <%= @active_membership.daily_soft_cap %> boekingen per dag toe.</p>
-<% elsif @active_membership&.credit? %>
-  <p>Beschikbare credits: <strong><%= CreditLedger.remaining_for(user: spree_current_user, gym: current_gym) %></strong></p>
-<% else %>
-  <p>Geen actief lidmaatschap voor deze locatie.</p>
-<% end %>
-
-<% @class_types.each do |class_type| %>
-  <section class="class-type">
-    <h2><%= class_type.name %></h2>
-    <% if class_type.description.present? %>
-      <p><%= class_type.description %></p>
-    <% end %>
-
-    <% sessions = @sessions_by_class_type[class_type.id] || [] %>
-    <% if sessions.any? %>
-      <ul class="sessions">
-        <% sessions.each do |session| %>
-          <li>
-            <strong><%= session_datetime(session) ? (l(session_datetime(session), format: :long) rescue session_datetime(session)) : "-" %></strong>
-            <% if session.trainer_name.present? %>
-              &mdash; <span>Trainer: <%= session.trainer_name %></span>
+  <% if @sessions_by_class_type.present? %>
+    <% (@class_types || []).each do |class_type| %>
+      <section class="mb-6">
+        <h2 class="text-lg font-medium"><%= class_type.try(:name) || "Les" %></h2>
+        <% sessions = @sessions_by_class_type[class_type.id] || [] %>
+        <% if sessions.any? %>
+          <ul class="divide-y rounded-lg border">
+            <% sessions.each do |s| %>
+              <li class="p-4 flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                  <div><strong><%= l(s.try(:start_at) || s.try(:starts_at), format: :long) rescue (s.try(:start_at) || s.try(:starts_at)) %></strong></div>
+                  <% if (t = s.try(:trainer)) %>
+                    <div>Trainer: <%= t.try(:user)&.try(:email) || t.try(:name) %></div>
+                  <% end %>
+                </div>
+                <%= link_to "Details", storefront_session_path(s), class: "rounded-md px-3 py-1.5 text-sm bg-gray-900 text-white hover:bg-gray-800" %>
+              </li>
             <% end %>
-            <span>(<%= session.spots_left %> plekken vrij)</span>
-            <%= link_to 'Details', storefront_session_path(session, gym_slug: current_gym.slug) %>
-          </li>
+          </ul>
+        <% else %>
+          <p class="text-gray-600">Geen sessies gepland.</p>
         <% end %>
-      </ul>
-    <% else %>
-      <p>Geen sessies gepland in de komende weken.</p>
+      </section>
     <% end %>
-  </section>
-<% end %>
+  <% else %>
+    <p class="text-gray-600">Nog geen geplande sessies.</p>
+  <% end %>
+</div>
+EOF

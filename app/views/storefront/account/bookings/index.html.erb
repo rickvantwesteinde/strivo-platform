@@ -1,65 +1,29 @@
-<h1>Mijn boekingen</h1>
+tee app/views/storefront/account/bookings/index.html.erb >/dev/null <<'EOF'
+<div class="max-w-3xl mx-auto p-6 space-y-6">
+  <h1 class="text-2xl font-semibold">Mijn boekingen</h1>
 
-<% if @active_membership&.credit? %>
-  <p>Beschikbare credits: <strong><%= @remaining_credits %></strong></p>
-<% elsif @active_membership&.unlimited? %>
-  <p>Plan: <strong>Onbeperkt</strong> (max. <%= @active_membership.daily_soft_cap %> boekingen per dag)</p>
-<% else %>
-  <p>Geen actief lidmaatschap voor <%= current_gym.name %>.</p>
-<% end %>
-
-<section>
-  <h2>Komende boekingen</h2>
-  <% if @upcoming_bookings&.any? %>
-    <table>
-      <thead>
-        <tr>
-          <th>Datum</th>
-          <th>Les</th>
-          <th>Trainer</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @upcoming_bookings.each do |booking| %>
-          <tr>
-            <td><%= l(booking.session.starts_at, format: :long) %></td>
-            <td><%= booking.session.class_type.name %></td>
-            <td><%= booking.session.trainer_name.presence || '-' %></td>
-            <td><%= booking.status.humanize %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+  <% if @bookings.present? %>
+    <ul class="divide-y rounded-lg border">
+      <% @bookings.each do |b| %>
+        <% s = b.try(:session) %>
+        <li class="p-4 flex items-center justify-between">
+          <div>
+            <div class="font-medium"><%= s.try(:class_type)&.try(:name) || "Sessie" %></div>
+            <div class="text-sm text-gray-600">
+              <%= s&.try(:start_at) || s&.try(:starts_at) ? (l(s.try(:start_at) || s.try(:starts_at), format: :long) rescue (s.try(:start_at) || s.try(:starts_at))) : "-" %>
+            </div>
+          </div>
+          <% if s %>
+            <div class="flex items-center gap-3">
+              <%= link_to "Details", storefront_session_path(s), class: "rounded-md px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200" %>
+              <%= button_to "Annuleer", storefront_booking_path(b), method: :delete, class: "rounded-md px-3 py-1.5 text-sm bg-red-600 text-white hover:bg-red-700" %>
+            </div>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
   <% else %>
-    <p>Geen komende boekingen.</p>
+    <p class="text-gray-600">Je hebt nog geen boekingen.</p>
   <% end %>
-</section>
-
-<section>
-  <h2>Voorbije boekingen</h2>
-  <% if @past_bookings&.any? %>
-    <table>
-      <thead>
-        <tr>
-          <th>Datum</th>
-          <th>Les</th>
-          <th>Trainer</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @past_bookings.each do |booking| %>
-          <tr>
-            <td><%= l(booking.session.starts_at, format: :long) %></td>
-            <td><%= booking.session.class_type.name %></td>
-            <td><%= booking.session.trainer_name.presence || '-' %></td>
-            <td><%= booking.status.humanize %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  <% else %>
-    <p>Geen eerdere boekingen.</p>
-  <% end %>
-</section>
+</div>
+EOF

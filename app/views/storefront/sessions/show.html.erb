@@ -1,28 +1,33 @@
-<h1><%= @session.class_type.name %></h1>
+tee app/views/storefront/sessions/show.html.erb >/dev/null <<'EOF'
+<% if @session.present? %>
+  <div class="max-w-3xl mx-auto p-6 space-y-6">
+    <h1 class="text-2xl font-semibold"><%= @session.try(:class_type)&.try(:name) || "Sessie" %></h1>
+    <div class="text-gray-700">
+      <div><strong>Wanneer:</strong> <%= l(@session.try(:start_at) || @session.try(:starts_at), format: :long) rescue (@session.try(:start_at) || @session.try(:starts_at)) %></div>
+      <% if (t = @session.try(:trainer)) %>
+        <div><strong>Trainer:</strong> <%= t.try(:user)&.try(:email) || t.try(:name) %></div>
+      <% end %>
+    </div>
 
-<p><strong>Wanneer:</strong>
-  <% sd = session_datetime(@session) %>
-  <% ed = (@session.respond_to?(:ends_at) && @session.ends_at.present?) ? @session.ends_at : nil %>
-  <%= sd ? (l(sd, format: :long) rescue sd) : "-" %>
-  <% if ed %> - <%= (l(ed, format: :long) rescue ed) %><% end %>
-</p>
-<p><strong>Locatie:</strong> <%= @session.gym %></p>
-<% if @session.trainer_name.present? %>
-  <p><strong>Trainer:</strong> <%= @session.trainer_name %></p>
-<% end %>
-<p><strong>Capaciteit:</strong> <%= @session.capacity %></p>
-<p><strong>Ingeschreven:</strong> <%= @occupancy %> / <%= @session.capacity %></p>
-<p><strong>Vrije plekken:</strong> <%= @spots_left %></p>
+    <div class="pt-4">
+      <% if @booking.present? %>
+        <%= button_to "Annuleer boeking",
+            storefront_booking_path(@booking),
+            method: :delete,
+            class: "rounded-md px-4 py-2 bg-red-600 text-white hover:bg-red-700" %>
+      <% else %>
+        <%= button_to "Boek deze sessie",
+            storefront_bookings_path(session_id: @session.id),
+            method: :post,
+            class: "rounded-md px-4 py-2 bg-gray-900 text-white hover:bg-gray-800" %>
+      <% end %>
+    </div>
 
-<% if @booking.present? %>
-  <p>Je bent ingeschreven voor deze sessie.</p>
-  <%= button_to 'Annuleer', storefront_booking_path(@booking, gym_slug: current_gym.slug), method: :delete, data: { confirm: 'Weet je het zeker?' } %>
-<% elsif @session.full? %>
-  <p>Deze sessie is vol.</p>
-<% elsif @active_membership&.unlimited? && @daily_cap_reached %>
-  <p>Je hebt je dagelijkse limiet bereikt voor onbeperkte boekingen.</p>
+    <div>
+      <%= link_to "← Terug naar lessen", storefront_classes_path, class: "text-sm text-gray-600 hover:underline" %>
+    </div>
+  </div>
 <% else %>
-  <%= button_to 'Boek', storefront_bookings_path(session_id: @session.id, gym_slug: current_gym.slug), method: :post %>
+  <div class="max-w-3xl mx-auto p-6"><p>Sessie niet gevonden.</p></div>
 <% end %>
-
-<p><%= link_to 'Terug naar lessen', storefront_classes_path(gym_slug: current_gym.slug) %></p>
+EOF
